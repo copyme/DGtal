@@ -10,6 +10,7 @@ SET(DGTAL_TESTS_SRC
   testMorton
   testHashTree
   testSliceImageFromFunctor
+  testQuasiAffineTransformation2D
 #  testImageContainerByHashTree
   )
 
