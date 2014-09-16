@@ -51,6 +51,8 @@
 #include <GL/glu.h>
 #endif
 
+#include <QtGui/qapplication.h>
+
 
 #include <QGLViewer/qglviewer.h>
 #include <QGLWidget>
@@ -120,7 +122,7 @@ namespace DGtal
   class Viewer3D : public QGLViewer, public Display3D<Space, KSpace>
   {
 
-    BOOST_CONCEPT_ASSERT((CSpace<Space>));
+    BOOST_CONCEPT_ASSERT((concepts::CSpace<Space>));
 
     //---------------overwritting some functions of Display3D -------------------
 
@@ -263,7 +265,7 @@ namespace DGtal
       Image2DDomainD3D( TDomain aDomain, Viewer3D::ImageDirection normalDir=zDirection,
                         double xBottomLeft=0.0, double yBottomLeft=0.0, double zBottomLeft=0.0, std::string mode= "BoundingBox")
       {
-        BOOST_CONCEPT_ASSERT(( CDomain < TDomain >));
+        BOOST_CONCEPT_ASSERT(( concepts::CDomain < TDomain >));
         myMode = mode;
         myDirection=normalDir;
         myDomainWidth = (aDomain.upperBound())[0]-(aDomain.lowerBound())[0]+1;
@@ -447,8 +449,8 @@ namespace DGtal
       {
         BOOST_CONCEPT_ASSERT(( CConstImage < TImageType > ));
         BOOST_CONCEPT_ASSERT(( CUnaryFunctor<TFunctor, typename TImageType::Value, unsigned int> )) ;
-        assert ( (image.domain().upperBound())[0]-(image.domain().lowerBound())[0]+1== myImageWidth &&
-                 (image.domain().upperBound())[1]-(image.domain().lowerBound())[1]+1== myImageHeight);
+        assert ( (image.domain().upperBound())[0]-(image.domain().lowerBound())[0]+1== static_cast<int>(myImageWidth) &&
+                 (image.domain().upperBound())[1]-(image.domain().lowerBound())[1]+1== static_cast<int>(myImageHeight));
 
         point1[0] += xTranslation; point1[1] += yTranslation; point1[2] += zTranslation;
         point2[0] += xTranslation; point2[1] +=yTranslation; point2[2] += zTranslation;
@@ -711,22 +713,12 @@ namespace DGtal
 
 
     /**
-     * Draw a linel by using the [gluCylinder] primitive.
-     * @param aLinel the linel to draw
-     **/
-    void glDrawGLLinel ( typename Viewer3D<Space,KSpace>::LineD3D aLinel );
-
-
-
-
-    /**
      * Draw a linel by using the [gluCShere] primitive.
      * @param pointel the pointel to draw
      */
-    void glDrawGLPointel ( typename Viewer3D<Space,KSpace>::BallD3D pointel );
-
-
-
+    void glDrawGLBall ( typename Viewer3D<Space,KSpace>::BallD3D pointel );
+    
+ 
 
     /**
      * Used to manage new key event (wich are added from the default
@@ -810,8 +802,8 @@ namespace DGtal
       bool operator() ( typename Viewer3D<Space,KSpace>::PolygonD3D q1,
                         typename Viewer3D<Space,KSpace>::PolygonD3D q2 )
       {
-        double c1x, c1y, c1z=0.0;
-        double c2x, c2y, c2z=0.0;
+        double c1x=0.0, c1y=0.0, c1z=0.0;
+        double c2x=0.0, c2y=0.0, c2z=0.0;
         for(unsigned int i=0; i< q1.vertices.size(); i++){
           c1x+=q1.vertices.at(i)[0];
           c1y+=q1.vertices.at(i)[1];
@@ -975,7 +967,7 @@ namespace DGtal
           double norm = sqrt(vectNormal[0]*vectNormal[0]+vectNormal[1]*vectNormal[1]+vectNormal[2]*vectNormal[2]);
           vectNormal[0] /=norm; vectNormal[1] /=norm; vectNormal[2] /=norm;
         }
-        
+
         myBufferWidth = BasicMathFunctions::roundToUpperPowerOfTwo(myImageWidth);
         myBufferHeight = BasicMathFunctions::roundToUpperPowerOfTwo(myImageHeight);
 
@@ -1110,6 +1102,7 @@ namespace DGtal
     /// Used to store all the domains
     std::vector<Image2DDomainD3D> myImageDomainList;
 
+    unsigned int myBallDisplayPrecision;
 
   }; // end of class Viewer3D
 
