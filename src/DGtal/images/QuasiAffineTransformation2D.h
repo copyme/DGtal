@@ -41,6 +41,7 @@
 //////////////////////////////////////////////////////////////////////////////
 // Inclusions
 #include <iostream>
+#include <limits>
 #include "DGtal/base/Common.h"
 #include <functional>
 #include "DGtal/helpers/StdDefs.h"
@@ -193,7 +194,7 @@ public:
                 float l = 1.f - r;
                 float u = point[1] - std::floor ( point[1] );
                 float d = 1.f - u;
-                typename TImage::Value color ( 0 ); // how about type overflow ?
+                float color = 0.f;
                 float count = 0.f;
 
                 Point p1 ( std::floor ( point[0] ), std::floor ( point[1] ) );
@@ -221,10 +222,16 @@ public:
                     color += input ( p4 ) * r * u;
                     count += r * u;
                 }
-                if ( count > 0.f )
+                if ( count )
                     color /= count;
 
-                output.setValue ( Point ( i, j ), color );
+                if ( std::floor ( color + 0.5f ) > std::numeric_limits < typename TImage::Value >::max ( ) )
+                    output.setValue ( Point ( i, j ), std::numeric_limits < typename TImage::Value >::max ( ) );
+
+                else if ( std::floor ( color + 0.5f ) < std::numeric_limits < typename TImage::Value >::min ( ) )
+                    output.setValue ( Point ( i, j ), std::numeric_limits < typename TImage::Value >::min ( ) );
+                else
+                    output.setValue ( Point ( i, j ), std::floor ( color + 0.5f ) );
                 start += IncrY;
             }
             start += IncrX;
