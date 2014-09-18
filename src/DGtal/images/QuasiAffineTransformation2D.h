@@ -60,7 +60,7 @@ namespace DGtal
  */
 
 template <typename TSpace>
-class QuasiAffineTransformation2D : std::unary_function <typename TSpace::Point, typename TSpace::Point>
+class ForwardsQuasiAffineTransformation2D : std::unary_function <typename TSpace::Point, typename TSpace::Point>
 {
     ///Checking concepts
     BOOST_CONCEPT_ASSERT(( concepts::CSpace<TSpace> ));
@@ -74,7 +74,7 @@ public:
 
     // ----------------------- Interface --------------------------------------
 public:
-      QuasiAffineTransformation2D ( Matrix matrix, int omega, Z2i::Vector vect )
+      ForwardsQuasiAffineTransformation2D ( Matrix matrix, int omega, Z2i::Vector vect )
       {
           m_matrix = matrix;
           m_omega = omega;
@@ -114,6 +114,8 @@ public:
         m_matrix(1,0) = -matrix(1,0) * omega;
         m_matrix(0,1) = -matrix(0,1) * omega;
         m_matrix(1,1) = matrix(0,0) * omega;
+        if ( det < 0 )
+            m_matrix *= -1;
         m_vector = ( Matrix() - matrix ) * vect;
         m_omega = std::abs ( det );
     }
@@ -141,6 +143,7 @@ public:
     typedef Z2i::RealPoint RealPoint;
     typedef Z2i::Vector Vector;
     typedef SimpleMatrix < int, 2, 2 > Matrix;
+    typedef std::vector < Point > Paving;
     // ----------------------- Interface --------------------------------------
 public:
     QuasiAffineTransformer2D ( Matrix matrix, int omega, Z2i::Vector vect )
@@ -150,12 +153,14 @@ public:
         m_matrix(1,0) = -matrix(1,0) * omega;
         m_matrix(0,1) = -matrix(0,1) * omega;
         m_matrix(1,1) = matrix(0,0) * omega;
+        if ( det < 0 )
+            m_matrix *= -1;
         m_vector = ( Matrix() - matrix ) * vect;
         m_omega = std::abs ( det );
     }
 
     // Just calculating starting point and steps
-    void BackwardsNN ( const TImage & input, TImage & output )
+    void BackwardsNearestNeighborInterpolation ( const TImage & input, TImage & output )
     {
         Point start = m_matrix * output.domain().lowerBound() + m_vector;
         Vector IncrX = m_matrix * Vector ( 1, - ( output.domain().upperBound()[1] - output.domain().lowerBound()[1] + 1 ) );
@@ -172,6 +177,65 @@ public:
             }
             start += IncrX;
         }
+    }
+    void BackwardsLinearInterpolation ( const TImage & input, TImage & output )
+    {
+        Point start = m_matrix * output.domain().lowerBound() + m_vector;
+        Vector IncrX = m_matrix * Vector ( 1, - ( output.domain().upperBound()[1] - output.domain().lowerBound()[1] + 1 ) );
+        Vector IncrY = m_matrix * Vector ( 0, 1 );
+
+        for ( int i = output.domain().lowerBound()[0]; i <= output.domain().upperBound()[0]; i++ )
+        {
+            for ( int j = output.domain().lowerBound()[1]; j <= output.domain().upperBound()[1]; j++ )
+            {
+                RealPoint point = start / m_omega;
+                float r = point[0] - std::floor ( point[0] );
+                float l = 1.f - r;
+                float u = point[1] - std::floor ( point[1] );
+                float d = 1.f - u;
+                typename TImage::Value color ( 0 ); // how about type overflow ?
+                float count = 0.f;
+
+                Point p1 ( std::floor ( point[0] ), std::floor ( point[1] ) );
+                Point p2 ( std::floor ( point[0] ), std::ceil ( point[1] ) );
+                Point p3 ( std::ceil ( point[0] ), std::floor ( point[1] ) );
+                Point p4 ( std::ceil ( point[0] ), std::ceil ( point[1] ) );
+
+                if ( input.domain().isInside ( p1 ) )
+                {
+                    color += input ( p1 ) * l * d;
+                    count += l * d;
+                }
+                if ( input.domain().isInside ( p2 ) )
+                {
+                    color += input ( p2 ) * l * u;
+                    count += l * u;
+                }
+                if ( input.domain().isInside ( p3 ) )
+                {
+                    color += input ( p3 ) * r * d;
+                    count += r * d;
+                }
+                if ( input.domain().isInside ( p4 ) )
+                {
+                    color += input ( p4 ) * r * u;
+                    count += r * u;
+                }
+                if ( count > 0.f )
+                    color /= count;
+
+                output.setValue ( Point ( i, j ), color );
+                start += IncrY;
+            }
+            start += IncrX;
+        }
+    }
+
+    void PavingsNaive ( const TImage & input, TImage & output )
+    {
+        Paving P, rP;
+        // first only contracting QAT
+
     }
 
     // ------------------------- Protected Datas ------------------------------

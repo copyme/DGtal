@@ -37,6 +37,12 @@
 #include "DGtal/io/writers/GenericWriter.h"
 #include "DGtal/images/ImageSelector.h"
 #include "DGtal/images/ConstImageAdapter.h"
+
+#ifndef NDEBUG
+#include <fenv.h>
+#endif
+
+
 ///////////////////////////////////////////////////////////////////////////////
 
 using namespace std;
@@ -69,7 +75,12 @@ bool testtestQuasiAffineTransformation2D()
 
 int main( int argc, char** argv )
 {
-  typedef QuasiAffineTransformation2D<Z2i::Space> QuasiAffineTrans;
+
+#ifndef NDEBUG
+    fetestexcept ( FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW );
+#endif
+
+  typedef ForwardsQuasiAffineTransformation2D<Z2i::Space> QuasiAffineTrans;
   typedef BackwardsQuasiAffineTransformation2D <Z2i::Space> BackwardsNN2D;
   typedef ImageSelector<Z2i::Domain, unsigned char>::Type Image;
   typedef QuasiAffineTransformer2D < Image > QuasiAffineTransformer2D;
@@ -84,7 +95,7 @@ int main( int argc, char** argv )
   mat(1,1) = 3;
   QuasiAffineTrans trans(mat, 6, Z2i::Vector(0,0));
   DomainQuasiAffineTrans domainTrans (  trans );
-  Image image = PGMReader<Image>::importPGM(testPath+"samples/church-small.pgm");
+  Image image = PGMReader<Image>::importPGM(testPath+"samples/church.pgm");
   Bounds bounds = domainTrans ( image.domain() );
 
   Identity idD;
@@ -97,10 +108,13 @@ int main( int argc, char** argv )
   QuasiAffineTransformer2D imageTransformer(mat, 6, Z2i::Vector(0,0));
 
   Image final (Z2i::Domain ( bounds.first, bounds.second ) );
+  Image final2 (Z2i::Domain ( bounds.first, bounds.second ) );
 
-  imageTransformer.BackwardsNN ( image, final );
+  imageTransformer.BackwardsNearestNeighborInterpolation ( image, final );
+  imageTransformer.BackwardsLinearInterpolation ( image, final2 );
 
   final >> "test-image-trans-backwardsNN.pgm";
+  final2 >> "test-image-trans-linearI.pgm";
 
   trace.beginBlock ( "Testing class testQuasiAffineTransformation2D" );
   trace.info() << "Args:";
