@@ -1,15 +1,5 @@
 SET(DGTAL_TESTS_SRC
-   testAdjacency
-   testCellularGridSpaceND
-   testDigitalSurface
-   testDigitalTopology
-   testObject
-   testObjectBorder
-   testSimpleExpander
-   testSCellsFunctor
-   testUmbrellaComputer
-   testSurfaceHelper
-   testHomotopicThinning
+  testParametricCurves3D
  )
 
 FOREACH(FILE ${DGTAL_TESTS_SRC})
@@ -17,13 +7,6 @@ FOREACH(FILE ${DGTAL_TESTS_SRC})
   target_link_libraries (${FILE} DGtal DGtalIO)
   add_test(${FILE} ${FILE})
 ENDFOREACH(FILE)
-
-
-SET(DGTAL_BENCH_SRC
-   testObject-benchmark
-   testImplicitDigitalSurface-benchmark
-   testLightImplicitDigitalSurface-benchmark
-)
 
 
 #Benchmark target

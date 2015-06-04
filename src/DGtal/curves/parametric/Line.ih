@@ -1,0 +1,103 @@
+/**
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **/
+
+/**
+ * @file Line.ih
+ * @author Kacper Pluta (\c kacper.pluta@esiee.fr )
+ * Laboratoire d'Informatique Gaspard-Monge - LIGM, A3SI, France
+ *
+ * @date 2014/11/05
+ *
+ * Implementation of inline methods defined in Line.h
+ *
+ * This file is part of the DGtal library.
+ */
+
+///////////////////////////////////////////////////////////////////////////////
+// IMPLEMENTATION of inline methods.
+///////////////////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Implementation of inline methods                                          //
+
+template <typename T>
+inline
+DGtal::Line<T>::Line ( bool rx, bool ry, bool rz )
+{
+    mask[0] = rx;
+    mask[1] = ry;
+    mask[2] = rz;
+}
+
+template < typename T>
+inline
+typename DGtal::Line<T>::RealPoint DGtal::Line<T>::x ( const double t ) const
+{
+    return DGtal::Line<T>::RealPoint ( mask[0] ? t : 0, mask[1] ? t : 0, mask[2] ? t : 0 );
+}
+
+template < typename T>
+inline
+typename DGtal::Line<T>::RealPoint DGtal::Line<T>::xp ( const double ) const
+{
+    return DGtal::Line<T>::RealPoint ( mask[0] ? 1 : 0, mask[1] ? 1 : 0, mask[2] ? 1 : 0 );
+}
+
+template < typename T>
+inline
+double DGtal::Line<T>:: f ( const RealPoint & p ) const
+{
+    return p[0];
+}
+
+template < typename T>
+inline
+double DGtal::Line<T>:: g ( const RealPoint & p ) const
+{
+    return p[1];
+}
+
+template < typename T>
+inline
+double DGtal::Line<T>:: h ( const RealPoint & p ) const
+{
+    return p[2];
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Implementation of inline functions and external operators                 //
+
+/**
+ * Overloads 'operator<<' for displaying objects of class 'Line'.
+ * @param out the output stream where the object is written.
+ * @param object the object of class 'Line' to write.
+ * @return the output stream after the writing.
+ */
+template <typename TSpace>
+inline
+std::ostream&
+DGtal::operator<< ( std::ostream & out,
+                  const Line < TSpace > & object )
+{
+    object.selfDisplay ( out );
+    return out;
+}
+
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+

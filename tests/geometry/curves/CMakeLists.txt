@@ -21,6 +21,8 @@ SET(DGTAL_TESTS_SRC
   testDSLSubsegment
   testArithDSSIterator
   testArithmeticalDSSConvexHull
+  testLambdaMST2D
+  testLambdaMST3D
   )
 
 

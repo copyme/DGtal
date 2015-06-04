@@ -46,7 +46,9 @@
 #include <utility>
 #include <exception>
 #include "DGtal/base/Common.h"
-#include <DGtal/kernel/domains/CDomain.h>
+#include "DGtal/kernel/domains/CDomain.h"
+#include "DGtal/kernel/CSpace.h"
+#include "DGtal/base/CUnaryFunctor.h"
 //////////////////////////////////////////////////////////////////////////////
 
 namespace DGtal
@@ -66,16 +68,18 @@ namespace functors
      *
      * @see exampleRigidtransformation3d.cpp
      */
-template <typename TSpace>
-class ForwardRigidTransformation3D : std::unary_function <typename TSpace::Point, typename TSpace::Point>
+template <typename TSpace, typename TFunctor, typename TInputValue, typename TOutputValue >
+class ForwardRigidTransformation3D : std::unary_function <TInputValue, TOutputValue>
 {
     ///Checking concepts
+    BOOST_CONCEPT_ASSERT(( CUnaryFunctor<TFunctor, TInputValue, TOutputValue> ));
     BOOST_CONCEPT_ASSERT(( concepts::CSpace<TSpace> ));
     BOOST_STATIC_ASSERT(( TSpace::dimension == 3 ));
+    BOOST_STATIC_ASSERT(( TOutputValue::dimension == 3 ));
+    BOOST_STATIC_ASSERT(( TInputValue::dimension == 3 ));
 
     // ----------------------- Types ------------------------------
 public:
-    typedef typename TSpace::Point Point;
     typedef typename TSpace::RealPoint RealPoint;
     typedef typename TSpace::RealVector RealVector;
 
@@ -106,23 +110,23 @@ public:
        * @return the transformed point.
        */
     inline
-    Point operator()( const Point& aInput ) const
+    TOutputValue operator()( const TInputValue & aInput ) const
     {
-        Point p;
+        RealPoint p;
 
-        p[0] = std::floor ( ( ( ( ( t_cos + ( axis[0] * axis[0] ) * ( 1. - t_cos ) ) * ( aInput[0] - origin[0] ) )
+        p[0] = ( ( ( ( t_cos + ( axis[0] * axis[0] ) * ( 1. - t_cos ) ) * ( aInput[0] - origin[0] ) )
                 + ( ( axis[0] * axis[1] * ( 1. - t_cos ) - axis[2] * t_sin ) * ( aInput[1] - origin[1] ) )
-                + ( ( axis[1] * t_sin + axis[0] * axis[2] * ( 1. - t_cos )  ) * ( aInput[2] - origin[2] ) ) ) + trans[0] ) + origin[0] + 0.5 );
+                + ( ( axis[1] * t_sin + axis[0] * axis[2] * ( 1. - t_cos )  ) * ( aInput[2] - origin[2] ) ) ) + trans[0] ) + origin[0];
 
-        p[1] = std::floor ( ( ( ( ( axis[2] * t_sin + axis[0] * axis[1] * ( 1. - t_cos ) ) *  ( aInput[0] - origin[0] ) )
+        p[1] = ( ( ( ( axis[2] * t_sin + axis[0] * axis[1] * ( 1. - t_cos ) ) *  ( aInput[0] - origin[0] ) )
                 + ( ( t_cos + ( axis[1] * axis[1] ) * ( 1. - t_cos ) ) * ( aInput[1] - origin[1] ) )
-                + ( ( -axis[0] * t_sin + axis[1] * axis[2] * ( 1. - t_cos ) ) * ( aInput[2] - origin[2] ) ) ) + trans[1] ) + origin[1] + 0.5 );
+                + ( ( -axis[0] * t_sin + axis[1] * axis[2] * ( 1. - t_cos ) ) * ( aInput[2] - origin[2] ) ) ) + trans[1] ) + origin[1];
 
-        p[2] = std::floor ( ( ( ( ( -axis[1] * t_sin + axis[0] * axis[2] * ( 1. - t_cos ) ) * ( aInput[0] - origin[0] ) )
+        p[2] = ( ( ( ( -axis[1] * t_sin + axis[0] * axis[2] * ( 1. - t_cos ) ) * ( aInput[0] - origin[0] ) )
                 + ( ( axis[0] * t_sin + axis[1] * axis[2] * ( 1. - t_cos ) ) * ( aInput[1] - origin[1] ) )
-                + ( ( t_cos + ( axis[2] * axis[2] ) * ( 1. - t_cos ) ) * ( aInput[2] - origin[2] ) ) ) + trans[2] ) + origin[2] + 0.5 );
+                + ( ( t_cos + ( axis[2] * axis[2] ) * ( 1. - t_cos ) ) * ( aInput[2] - origin[2] ) ) ) + trans[2] ) + origin[2];
 
-        return p;
+        return functor ( p );
     }
 
     // ------------------------- Protected Datas ------------------------------
@@ -132,7 +136,62 @@ protected:
     double t_sin;
     double t_cos;
     RealVector trans;
+    TFunctor functor;
 };
+
+/////////////////////////////////////////////////////////////////////////////
+// Template class QuaternionRotation
+template <typename TSpace, typename TFunctor, typename TInputValue, typename TOutputValue >
+class QuaternionRotation : std::unary_function <TInputValue, TOutputValue>
+{
+    ///Checking concepts
+    BOOST_CONCEPT_ASSERT(( CUnaryFunctor<TFunctor, TInputValue, TOutputValue> ));
+    BOOST_CONCEPT_ASSERT(( concepts::CSpace<TSpace> ));
+    BOOST_STATIC_ASSERT(( TSpace::dimension == 3 ));
+    BOOST_STATIC_ASSERT(( TOutputValue::dimension == 3 ));
+    BOOST_STATIC_ASSERT(( TInputValue::dimension == 3 ));
+
+    // ----------------------- Types ------------------------------
+public:
+    typedef typename TSpace::RealPoint RealPoint;
+    typedef typename TSpace::RealVector RealVector;
+
+    // ----------------------- Interface --------------------------------------
+public:
+    /**
+       * Constructor.
+       * @param A -- Pythagorean quadruple component.
+       * @param B -- Pythagorean quadruple component.
+       * @param C -- Pythagorean quadruple component.
+       */
+    QuaternionRotation ( long int p_M, long int  p_N, long int  p_P, long int p_Q ) : m ( p_M ), n ( p_N ), p ( p_P ), q ( p_Q )
+    {
+       norm = m * m + n * n + p * p + q * q;
+    }
+
+    /**
+       * Operator
+       *
+       * @return the transformed point.
+       */
+    inline
+    TOutputValue operator()( const TInputValue & aInput ) const
+    {
+        RealPoint point;
+
+        point[0] = double( m * m + n * n - p * p - q * q )/(double)norm * aInput[0] + 2. * double( n * p - m * q )/(double)norm * aInput[1] + 2. * double( m * p + n * q )/(double)norm * aInput[2];
+        point[1] = 2. * double(  m * q + n * p )/(double)norm * aInput[0] + double( m * m - n * n + p * p - q * q )/(double)norm * aInput[1] + 2. * double( p * q - m * n )/(double)norm * aInput[2];
+        point[2] = 2. * double(  n * q - m * p )/(double)norm * aInput[0] + 2. * double( m * n + p * q )/(double)norm * aInput[1] + double( m * m - n * n - p * p + q * q )/(double)norm * aInput[2];
+
+        return functor ( point );
+    }
+
+    // ------------------------- Protected Datas ------------------------------
+protected:
+    long int m, n, p, q, norm;
+    TFunctor functor;
+};
+
 
 /////////////////////////////////////////////////////////////////////////////
 // Template class BackwardRigidTransformation3D
@@ -147,16 +206,18 @@ protected:
      *
      * @see exampleRigidtransformation3d.cpp
      */
-template <typename TSpace>
-class BackwardRigidTransformation3D : std::unary_function <typename TSpace::Point, typename TSpace::Point>
+template <typename TSpace, typename TFunctor, typename TInputValue, typename TOutputValue >
+class BackwardRigidTransformation3D : std::unary_function <TInputValue, TOutputValue>
 {
     ///Checking concepts
+    BOOST_CONCEPT_ASSERT(( CUnaryFunctor<TFunctor, TInputValue, TOutputValue> ));
     BOOST_CONCEPT_ASSERT(( concepts::CSpace<TSpace> ));
     BOOST_STATIC_ASSERT(( TSpace::dimension == 3 ));
+    BOOST_STATIC_ASSERT(( TOutputValue::dimension == 3 ));
+    BOOST_STATIC_ASSERT(( TInputValue::dimension == 3 ));
 
     // ----------------------- Types ------------------------------
 public:
-    typedef typename TSpace::Point Point;
     typedef typename TSpace::RealPoint RealPoint;
     typedef typename TSpace::RealVector RealVector;
 
@@ -186,22 +247,22 @@ public:
        * @return the transformed point.
        */
     inline
-    Point operator()( const Point& aInput ) const
+    TOutputValue operator()( const TInputValue & aInput ) const
     {
-        Point p;
+        RealPoint p;
 
-        p[0] = std::floor ( ( ( ( ( t_cos + ( axis[0] * axis[0] ) * ( 1. - t_cos ) ) * ( aInput[0] - trans[0] - origin[0] ) )
+        p[0] = ( ( ( ( t_cos + ( axis[0] * axis[0] ) * ( 1. - t_cos ) ) * ( aInput[0] - trans[0] - origin[0] ) )
                 + ( ( axis[2] * t_sin + axis[0] * axis[1] * ( 1. - t_cos ) ) * ( aInput[1] - trans[1] - origin[1] ) )
-                + ( ( -axis[1] * t_sin + axis[0] * axis[2] * ( 1. - t_cos ) ) * ( aInput[2] - trans[2] - origin[2] ) ) ) ) + origin[0] + 0.5 );
+                + ( ( -axis[1] * t_sin + axis[0] * axis[2] * ( 1. - t_cos ) ) * ( aInput[2] - trans[2] - origin[2] ) ) ) ) + origin[0];
 
-        p[1] = std::floor ( ( ( ( ( axis[0] * axis[1] * ( 1. - t_cos ) - axis[2] * t_sin )  * ( aInput[0] - trans[0] - origin[0] ) )
+        p[1] = ( ( ( ( axis[0] * axis[1] * ( 1. - t_cos ) - axis[2] * t_sin )  * ( aInput[0] - trans[0] - origin[0] ) )
                 + ( ( t_cos + ( axis[1] * axis[1] ) * ( 1. - t_cos ) ) * ( aInput[1] - trans[1] - origin[1] ) )
-                + ( ( axis[0] * t_sin + axis[1] * axis[2] * ( 1. - t_cos ) ) * ( aInput[2] - trans[2] - origin[2] ) ) ) ) + origin[1] + 0.5 );
+                + ( ( axis[0] * t_sin + axis[1] * axis[2] * ( 1. - t_cos ) ) * ( aInput[2] - trans[2] - origin[2] ) ) ) ) + origin[1];
 
-        p[2] = std::floor ( ( ( ( ( axis[1] * t_sin + axis[0] * axis[2] * ( 1. - t_cos )  ) * ( aInput[0] - trans[0] - origin[0] ) )
+        p[2] = ( ( ( ( axis[1] * t_sin + axis[0] * axis[2] * ( 1. - t_cos )  ) * ( aInput[0] - trans[0] - origin[0] ) )
                 + ( ( -axis[0] * t_sin + axis[1] * axis[2] * ( 1. - t_cos ) ) * ( aInput[1] - trans[1] - origin[1] ) )
-                + ( ( t_cos + ( axis[2] * axis[2] ) * ( 1. - t_cos ) ) * ( aInput[2] - trans[2] - origin[2] ) ) ) ) + origin[2] + 0.5 );
-        return p;
+                + ( ( t_cos + ( axis[2] * axis[2] ) * ( 1. - t_cos ) ) * ( aInput[2] - trans[2] - origin[2] ) ) ) ) + origin[2];
+        return functor ( p );
     }
 
     // ------------------------- Protected Datas ------------------------------
@@ -211,6 +272,7 @@ private:
     double t_sin;
     double t_cos;
     RealVector trans;
+    TFunctor functor;
 };
 
 /////////////////////////////////////////////////////////////////////////////

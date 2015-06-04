@@ -687,15 +687,6 @@ namespace functors
     std::vector<TValue> myGridSize;    
  };
 
-
-
-
-
-
-
-
-
-
   /**
    * Description of template class 'FlipDomainAxis' <p> \brief Aim:
    * Functor that flips the domain coordinate system from some 
@@ -767,11 +758,19 @@ namespace functors
  };
 
 
-
-
-
-
-
+ template <typename TRealVector, typename TVector>
+ struct VectorRounding
+ {
+     BOOST_STATIC_ASSERT(( TRealVector::dimension ==  TVector::dimension ));
+     inline
+     TVector operator () ( const TRealVector & point ) const
+     {
+         TVector out;
+         for ( unsigned int i = 0; i < TVector::dimension; i++ )
+             out[i] = std::floor ( point[i] + 0.5 );
+         return out;
+     }
+ };
 
 
   }//namespace functors

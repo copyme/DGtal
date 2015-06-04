@@ -1,0 +1,261 @@
+/**
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ **/
+
+/**
+ * @file ParametricCurveDigitizer3D.ih
+ * @author Kacper Pluta (\c kacper.pluta@esiee.fr )
+ * Laboratoire d'Informatique Gaspard-Monge - LIGM, A3SI, France
+ *
+ * @date 2014/09/26
+ *
+ * Implementation of inline methods defined in ParametricCurveDigitizer3D.h
+ *
+ * This file is part of the DGtal library.
+ */
+
+///////////////////////////////////////////////////////////////////////////////
+// IMPLEMENTATION of inline methods.
+///////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+#include <cassert>
+#include <algorithm>
+#include <exception>
+#include <cfloat>
+#include "DGtal/kernel/BasicPointFunctors.h"
+//////////////////////////////////////////////////////////////////////////////
+
+namespace DGtal
+{
+  ///////////////////////////////////////////////////////////////////////////////
+  // Implementation of inline methods                                          //
+  template <typename T>
+  inline
+  ParametricCurveDigitizer3D<T>::ParametricCurveDigitizer3D() : curve ( 0 )
+  {
+    attemptNumber = 3;
+  }
+  
+  template <typename T>
+  inline
+  void ParametricCurveDigitizer3D<T>::attach ( const T & p_curve )
+  {
+    curve = &p_curve;
+  }
+  
+  template <typename T>
+  inline
+  bool ParametricCurveDigitizer3D<T>::isValid ( ) const
+  {
+    if ( digitalCurve != 0 )
+      return true;
+    else
+      return false;
+  }
+  
+  
+  template <typename T>
+  inline
+  unsigned char ParametricCurveDigitizer3D<T>::findMainAxis ( const char & blockAxis, const double & i )
+  {
+    ParametricCurveDigitizer3D<T>::RealVector value;
+    value[0] = std::fabs ( curve->xp ( i )[0] );
+    value[1] = std::fabs ( curve->xp ( i )[1] );
+    value[2] = std::fabs ( curve->xp ( i )[2] );
+    
+    if ( blockAxis != -1 )
+      value[blockAxis] = FLT_MIN;
+    
+    if ( value[0] > value[1] && value[0] > value[2] )
+      return 0;
+    else if ( value[1] > value[0] && value[1] > value[2] )
+      return 1;
+    else
+      return 2;
+  }
+  
+  template <typename T>
+  inline
+  void ParametricCurveDigitizer3D<T>::digitize ( const double & tmin, double & tmax, double step )
+  {
+    assert ( isValid() );
+    Point curvePoint;
+    char blockAxis = -1;
+    double pStep = step;
+    unsigned int errC = 0;
+    double time = 0., pTime = 0.;
+    for ( double i = tmin; i < tmax; i += pStep )
+    {
+      pTime = time;
+      if ( errC > attemptNumber )
+      {
+	tmax = i;
+	throw std::runtime_error ( "Too many errors. Probably curvature or sampling step is too high." );
+      }
+      unsigned char mainAxis = findMainAxis ( blockAxis, i );
+      curvePoint = CurvePoint ( mainAxis, i, time );
+      if (time == pTime)
+	continue;
+      if ( digitalCurve->size() == 0 )
+	digitalCurve->push_back ( curvePoint );
+      else if ( std::find ( digitalCurve->begin(), digitalCurve->end(), curvePoint ) == digitalCurve->end() )
+      {
+	// In 26-connected curve a new point cannot be 26-connected to another points which already are a part of the curve
+	if ( digitalCurve->size() == 2 && is26Connected ( digitalCurve->back(), curvePoint ) && is26Connected ( digitalCurve->at(digitalCurve->size() - 2), curvePoint ) )
+	{
+	  if ( time > pTime )
+	  {
+	    digitalCurve->pop_back();
+	    digitalCurve->push_back ( curvePoint );
+	  }
+	}
+	else if ( digitalCurve->size() >= 3 && is26Connected ( digitalCurve->back(), curvePoint ) && is26Connected ( digitalCurve->at(digitalCurve->size() - 2), curvePoint ) && !is26Connected ( digitalCurve->at(digitalCurve->size() - 3), curvePoint ) )
+	{
+	  if ( time > pTime )
+	  {
+	    digitalCurve->pop_back();
+	    digitalCurve->push_back ( curvePoint );
+	  }
+	}
+	else if ( digitalCurve->size() >= 3 && is26Connected ( digitalCurve->back(), curvePoint ) && is26Connected ( digitalCurve->at(digitalCurve->size() - 2), curvePoint ) && is26Connected ( digitalCurve->at(digitalCurve->size() - 3), curvePoint ) )
+	{
+	  if ( time > pTime )
+	  {
+	    digitalCurve->pop_back();
+	    digitalCurve->pop_back();
+	    digitalCurve->push_back ( curvePoint );
+	  }
+	}
+	// if is disconnected try to fix the problem 
+	else if ( (!is26Connected ( digitalCurve->back(), curvePoint )) )
+	{
+	  if ( digitalCurve->size() >= 2 && is26Connected ( digitalCurve->at(digitalCurve->size() - 2), curvePoint ) )
+	  {
+	    if ( time > pTime )
+	    {
+	      digitalCurve->pop_back();
+	      digitalCurve->push_back ( curvePoint );
+	    }
+	  }
+	  else
+	  { 
+	    pStep = 1E-6;
+	    //If we could not find a good one. Seems that it can happened.
+	    blockAxis = mainAxis;
+	    if ( errC == 2 )
+	      blockAxis = -1;
+	    errC++;
+	  }
+	}
+	else
+	{
+	  pStep = step;
+	  blockAxis = -1;
+	  errC = 0;
+	  digitalCurve->push_back ( curvePoint );
+	}
+      }
+    }
+    if ( digitalCurve->size() >= 2 &&  is26Connected ( digitalCurve->at ( digitalCurve->size() - 2), digitalCurve->front() ) )
+      digitalCurve->pop_back();
+  }
+  
+  template <typename T>
+  inline
+  typename ParametricCurveDigitizer3D<T>::Point ParametricCurveDigitizer3D<T>::CurvePoint ( const char & mainAxis, const double & t, double & t_time )
+  {
+    Point curvePoint;
+//     double t_time = 0.;
+    functors::VectorRounding < RealPoint, Point > pRound;
+    Point pp = pRound ( curve->x ( t ) );
+    if ( mainAxis == 0 )
+    {
+      t_time = curve->f ( pp );
+      RealPoint p = curve->x ( t_time );
+      curvePoint[0] = pp[0];
+      curvePoint[1] = std::round ( p[1] );
+      curvePoint[2] = std::round ( p[2] );
+      std::cout << "f^-1 " << t_time << std::endl; 
+    }
+    else if ( mainAxis == 1 )
+    {
+      t_time = curve->g ( pp );
+      RealPoint p = curve->x ( t_time );
+      curvePoint[0] = std::round ( p[0] );
+      curvePoint[1] = pp[1];
+      curvePoint[2] = std::round ( p[2] );
+      std::cout << "g^-1 " << t_time << std::endl; 
+    }
+    else if ( mainAxis == 2 )
+    {
+      t_time = curve->h ( pp );
+      RealPoint p = curve->x ( t_time );
+      curvePoint[0] = std::round ( p[0] );
+      curvePoint[1] = std::round ( p[1] );
+      curvePoint[2] = pp[2];
+      std::cout << "h^-1 " << t_time << std::endl; 
+    }
+    return curvePoint;
+  }
+  
+  template <typename T>
+  inline
+  bool ParametricCurveDigitizer3D<T>::is26Connected ( const Point &x, const Point &y )
+  {
+    if ( std::abs ( x[0] - y[0] ) < 2 && std::abs ( x[1] - y[1] ) < 2 && std::abs ( x[2] - y[2] ) < 2 )
+      return true;
+    return false;
+  }
+  
+  template <typename T>
+  inline
+  void ParametricCurveDigitizer3D<T>::init ( typename ParametricCurveDigitizer3D<T>::DigitalCurve & digitCurve )
+  {
+    digitalCurve =  &digitCurve;
+  }
+  
+  template <typename T>
+  inline
+  void ParametricCurveDigitizer3D<T>::selfDisplay ( std::ostream & out ) const
+  {
+    out << "[ParametricCurveDigitizer3D]";
+  }
+  
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Implementation of inline functions and external operators                 //
+
+/**
+ * Overloads 'operator<<' for displaying objects of class 'ParametricCurveDigitizer3D'.
+ * @param out the output stream where the object is written.
+ * @param object the object of class 'ParametricCurveDigitizer3D' to write.
+ * @return the output stream after the writing.
+ */
+template <typename T>
+inline
+std::ostream&
+operator<< ( std::ostream & out,
+	     const DGtal::ParametricCurveDigitizer3D<T> & object )
+{
+  object.selfDisplay ( out );
+  return out;
+}
+
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+

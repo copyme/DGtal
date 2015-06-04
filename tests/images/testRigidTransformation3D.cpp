@@ -29,7 +29,6 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <iostream>
-#include <boost/graph/graph_concepts.hpp>
 #include "DGtal/base/Common.h"
 #include "ConfigTest.h"
 #include "DGtal/helpers/StdDefs.h"
@@ -40,6 +39,7 @@
 #include "DGtal/io/readers/PGMReader.h"
 #include "DGtal/io/readers/VolReader.h"
 #include "DGtal/io/writers/GenericWriter.h"
+#include "DGtal/kernel/BasicPointFunctors.h"
 ///////////////////////////////////////////////////////////////////////////////
 
 using namespace std;
@@ -57,8 +57,8 @@ using namespace functors;
 class testRigidTransformation3D
 {
   typedef ImageSelector<Domain, unsigned char >::Type Image;
-  typedef ForwardRigidTransformation3D < Space > ForwardTrans;
-  typedef BackwardRigidTransformation3D < Space > BackwardTrans;
+  typedef ForwardRigidTransformation3D < Space, VectorRounding < Space::RealPoint, Space::Point >, Space::Point, Space::Point > ForwardTrans;
+  typedef BackwardRigidTransformation3D < Space, VectorRounding < Space::RealPoint, Space::Point >, Space::Point, Space::Point > BackwardTrans;
   typedef ConstImageAdapter<Image, Domain, BackwardTrans, Image::Value, Identity > MyImageBackwardAdapter;
   typedef DomainRigidTransformation3D < Domain, ForwardTrans > DomainTrans;
   typedef DomainTrans::Bounds Bounds;
