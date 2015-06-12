@@ -527,7 +527,7 @@ class TestRunner
       }
       
       //! \todo cleanup
-      void _test( double & mse2d, double & mse3d, double & mae2d, double & mae3d )
+      void _test ( double & mse2d, double & mse3d, double & mae2d, double & mae3d, double &mse2DVar, double &mse3DVar )
       {
 	std::stringstream tr;
 	tr << "HelixMST3D_" << std::showpoint << std::setprecision(3) << radius1 << "_" << std::showpoint << std::setprecision(3) << radius2 << "_" << std::showpoint << std::setprecision(3) << depth << ".csv";
@@ -542,6 +542,9 @@ class TestRunner
 	
 	Z3i::RealVector tanGroundTruth;
 	Z3i::RealVector tanMST2D;
+	
+	std::vector<double> mse2dPartial;
+	std::vector<double> mse3dPartial;
 	
 	bool flag = true;
 	unsigned int axis = -1;
@@ -741,10 +744,14 @@ class TestRunner
 	  if ( tangent3D[2] > 0 && tanGroundTruth[2] < 0 )
 	    tangent3D[2] = -tangent3D[2];
 	  
-	  mse3d +=  pow ( tangent3D[0] - tanGroundTruth[0], 2 ) + pow ( tangent3D[1] - tanGroundTruth[1], 2 ), pow (tangent3D[2] - tanGroundTruth[2], 2 );
-	  mse2d +=  pow ( tanMST2D[0] - tanGroundTruth[0], 2 ) + pow ( tanMST2D[1] - tanGroundTruth[1], 2 ), pow ( tanMST2D[2] - tanGroundTruth[2], 2 );
-	  mae3d +=  fabs ( tangent3D[0] - tanGroundTruth[0] ) + fabs ( tangent3D[1] - tanGroundTruth[1] ), fabs (tangent3D[2] - tanGroundTruth[2] );
-	  mae2d +=  fabs ( tanMST2D[0] - tanGroundTruth[0] ) + fabs ( tanMST2D[1] - tanGroundTruth[1] ), fabs ( tanMST2D[2] - tanGroundTruth[2] );
+	  double mse3DTmp = pow ( tangent3D[0] - tanGroundTruth[0], 2 ) + pow ( tangent3D[1] - tanGroundTruth[1], 2 ) + pow (tangent3D[2] - tanGroundTruth[2], 2 );
+	  mse3d +=  mse3DTmp;
+	  mse3dPartial.push_back ( mse3DTmp );
+	  double mse2DTmp = pow ( tanMST2D[0] - tanGroundTruth[0], 2 ) + pow ( tanMST2D[1] - tanGroundTruth[1], 2 ) + pow ( tanMST2D[2] - tanGroundTruth[2], 2 );
+	  mse2d +=  mse2DTmp;
+	  mse2dPartial.push_back ( mse2DTmp );
+	  mae3d +=  fabs ( tangent3D[0] - tanGroundTruth[0] ) + fabs ( tangent3D[1] - tanGroundTruth[1] ) + fabs (tangent3D[2] - tanGroundTruth[2] );
+	  mae2d +=  fabs ( tanMST2D[0] - tanGroundTruth[0] ) + fabs ( tanMST2D[1] - tanGroundTruth[1] ) + fabs ( tanMST2D[2] - tanGroundTruth[2] );
 	  curve3D << i << "," << tangent3D[0] << "," << tangent3D[1] << "," << tangent3D[2] << std::endl;
 	  projec << i << "," << tanMST2D[0] << "," << tanMST2D[1] << "," << tanMST2D[2] << std::endl;
 	  ground << i << "," << tanGroundTruth[0] << "," << tanGroundTruth[1] << "," << tanGroundTruth[2] << std::endl;
@@ -754,6 +761,15 @@ class TestRunner
 	mse3d /= (double)counter;
 	mae2d /= (double)counter;
 	mae3d /= (double)counter;
+	
+	assert ( counter == mse2dPartial.size() );
+	for ( unsigned int i = 0; i < mse2dPartial.size(); i++ )
+	{
+	  mse2DVar += pow ( mse2dPartial[i] - mse2d, 2 );
+	  mse3DVar += pow ( mse3dPartial[i] - mse2d, 2 );
+	}
+	mse2DVar /= mse2dPartial.size();
+	mse3DVar /= mse3dPartial.size();
 	
 	curve3D.close();
 	projec.close();
@@ -854,12 +870,12 @@ public:
     print3D<MyDigitalCurve> ( digitalCurve, board );
   }
   
-  void runTest ( double & mse2d, double & mse3d, double & mae2d, double & mae3d )
+  void runTest ( double & mse2d, double & mse3d, double & mae2d, double & mae3d, double &mse2dVar, double &mse3DVar )
   {
     generateProjections();
     findShortest2DMaximalSegment();
     initEstimators();
-    _test ( mse2d, mse3d, mae2d, mae3d );
+    _test ( mse2d, mse3d, mae2d, mae3d, mse2dVar, mse3DVar );
   }
   
   ~TestRunner()
@@ -879,25 +895,26 @@ int main ( int argc, char ** argv )
     throw std::runtime_error ( "Too few arguments!" );
 //      feenableexcept ( FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW );
   std::ofstream mse ( "mse_ell_helix.csv" );
-  mse << "ln(h)" << "," << "ln(mse2d)" << "," << "ln(mse3d)" << "," << "h" << "," << "mse2d" << "," << "mse3d" << "," << "mae2d" << "," << "mae3d" << std::endl;
-  double mse2d, mse3d, mae2d, mae3d;
+  mse << "ln(h)" << "," << "ln(mse2d)" << "," << "ln(mse3d)" << "," << "h" << "," << "mse2d" << "," << "mse3d" << "," << "mae2d" << "," << "mae3d" << "," << "mse2dVar" << "," << "mse3dVar" << std::endl;
+  double mse2d, mse3d, mae2d, mae3d, mse2dVar, mse3DVar;
   Board3D<> board;
   TestRunner< EllipticHelix < Z3i::Space > > testRunner ( board );
   for ( double i = 1.;  i < std::atof ( argv[5] ); i += std::atof ( argv[4] ) )
   {
-    mse2d = mse3d = mae2d = mae3d = 0.;
+    mse2d = mse3d = mae2d = mae3d = mse2dVar = mse3DVar = 0.;
     bool status = true;
     board.clear();
     std::stringstream tr;
     tr << std::setprecision(3) << std::atof ( argv[1] ) * i << "_" << std::setprecision(3) << std::atof ( argv[2] ) * i << "_" << std::setprecision(3) << std::atof ( argv[3] ) * i;
-    testRunner.setLengthFilter ( true );
-    testRunner.setDistanceFilter ( true );
+//     testRunner.setLengthFilter ( true );
+//     testRunner.setDistanceFilter ( true );
     testRunner.setCurveParams ( std::atof ( argv[1] ) * i, std::atof ( argv[2] ) * i,std::atof ( argv[3] ) * i );
     testRunner.setTransformationParams ( std::atof(argv[6]), Z3i::RealVector ( 1, 0, 1 )  );
     testRunner.digitizeCurve ( 0.1, 2. * M_PI - 0.1, true, status );
-    testRunner.runTest ( mse2d, mse3d, mae2d, mae3d );
+    testRunner.runTest ( mse2d, mse3d, mae2d, mae3d, mse2dVar, mse3DVar );
     board.saveOBJ( tr.str().c_str() );
-    mse << std::log ( i ) << "," << std::log (mse2d) << "," << std::log ( mse3d ) << "," << i << "," << mse2d << "," << mse3d << "," << mae2d << "," << mae3d << "," << status << std::endl;;
+    mse << std::log ( i ) << "," << std::log (mse2d) << "," << std::log ( mse3d ) << "," << i << "," << mse2d << "," << mse3d << "," << mae2d << "," << mae3d
+    << "," << mse2dVar << "," << mse3DVar << "," << status << std::endl;;
   }
   std::cout << "Done." << std::endl;
   mse.close();
