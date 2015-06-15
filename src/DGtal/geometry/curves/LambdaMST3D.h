@@ -49,6 +49,7 @@
 
 namespace DGtal {
 
+  //!\todo add in documentation why we added + 1
 template < typename TSpace, typename TSegmentation, typename Functor >
 class LambdaMST3DEstimator
 {
@@ -129,7 +130,7 @@ public:
       {
 	if ( DSS->isInDSS ( point ) || ( EuclideanDistance<Point>( point, *(DSS->begin()) ) <= distFilter || EuclideanDistance <Point>( point, *(DSS->end()-1) ) <= distFilter )  )
 	{
-	  unsigned int dssLen = std::distance ( DSS.begin(), DSS.end() );
+	  unsigned int dssLen = std::distance ( DSS.begin(), DSS.end() ) + 1;
 	  if ( dssLen < lenFilter )
 	  {
 	    std::cerr << "Segment too short: " << dssLen << ", filter: " << lenFilter << std::endl;
@@ -138,7 +139,7 @@ public:
 	  
 	  prev = partial;
 	  found = true;
-	  unsigned int pos = std::distance ( DSS.begin(), std::find ( DSS.begin(), DSS.end(), point ) );
+	  unsigned int pos = std::distance ( DSS.begin(), std::find ( DSS.begin(), DSS.end(), point ) ) + 1;
 	  SegmentComputer comp ( *DSS );
 	  partial = myFunctor ( comp, pos, dssLen );
 	  if (avg)
@@ -173,10 +174,10 @@ public:
       
       for(; DSS != lastDSS; ++DSS)
       {
-	unsigned int dssLen = std::distance ( DSS.begin(), DSS.end() );
+	unsigned int dssLen = std::distance ( DSS.begin(), DSS.end() ) + 1;
 	SegmentComputer comp ( *DSS );
 	if ( dssLen > lenFilter )
-	  for ( int indexOfPointInDSS = 0; indexOfPointInDSS < dssLen; indexOfPointInDSS++ )
+	  for ( int indexOfPointInDSS = 1; indexOfPointInDSS < dssLen; indexOfPointInDSS++ )
 	    outValues.insert ( std::make_pair ( *(DSS.begin() + indexOfPointInDSS), myFunctor ( comp, indexOfPointInDSS, dssLen ) ) );
 	else
 	  std::cerr << "Segment too short: " << dssLen << ", filter: " << lenFilter << std::endl;
