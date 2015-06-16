@@ -206,7 +206,6 @@ public:
 	else
 	  result.push_back ( tangent.vector / tangent.eccentricity );
       }
-      return;
     }
     
     // ----------------------- Standard services ------------------------------

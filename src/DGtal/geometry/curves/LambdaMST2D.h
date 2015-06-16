@@ -124,7 +124,7 @@ public:
      */
     void eval ( std::vector <RealVector> & result )
     {
-      assert ( isValid() );
+      assert ( myBegin != myEnd && isValid() );
       std::multimap < Point, Value > outValues;
       typename TSegmentation::SegmentComputerIterator DSS = dssSegments->begin();
       typename TSegmentation::SegmentComputerIterator lastDSS = dssSegments->end();
@@ -158,7 +158,7 @@ public:
    */
     bool isValid() const
     {
-        return ( myBegin != myEnd && dssSegments != 0 );
+        return ( dssSegments != 0 );
     }
 
     // ------------------------- Private Datas --------------------------------
