@@ -214,6 +214,7 @@ class Naive3DDSSComputer
      * @param thickness thickness
      */
     void getParameters ( Vector3d& direction, PointD3d& intercept, PointD3d& thickness ) const;
+    void get2DSegmentsLength ( bool & statXY, bool & statXZ, bool & statYZ, unsigned int & pLenXY, unsigned int & pLenXZ, unsigned int & pLenYZ ) const;
 
     /**
      * Checks the validity/consistency of the object.

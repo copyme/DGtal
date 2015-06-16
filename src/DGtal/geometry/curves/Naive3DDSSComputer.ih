@@ -468,6 +468,20 @@ DGtal::Naive3DDSSComputer<TIterator,TInteger,connectivity>
     }
 }
 
+template <typename TIterator, typename TInteger, int connectivity>
+inline
+void
+DGtal::Naive3DDSSComputer<TIterator,TInteger,connectivity>
+::get2DSegmentsLength ( bool & statXY, bool & statXZ, bool & statYZ, unsigned int & pLenXY, unsigned int & pLenXZ, unsigned int & pLenYZ ) const
+{
+  statXY = blockXY;
+  statXZ = blockXZ;
+  statYZ = blockYZ;
+  pLenXY = lenXY;
+  pLenXZ = lenXZ;
+  pLenYZ = lenYZ;
+}
+
 //-----------------------------------------------------------------------------
 template <typename TIterator, typename TInteger, int connectivity>
 inline
