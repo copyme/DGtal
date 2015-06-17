@@ -61,7 +61,7 @@
 namespace DGtal
 {
 
-  namespace details
+  namespace detail
   {
   /////////////////////////////////////////////////////////////////////////////
   // template class PointValueCompare
@@ -154,7 +154,7 @@ namespace DGtal
 
 
     //concept assert
-    BOOST_CONCEPT_ASSERT(( CImage<TImage> ));
+    BOOST_CONCEPT_ASSERT(( concepts::CImage<TImage> ));
     BOOST_CONCEPT_ASSERT(( concepts::CDigitalSet<TSet> ));
     BOOST_CONCEPT_ASSERT(( concepts::CPointPredicate<TPointPredicate> ));
     BOOST_CONCEPT_ASSERT(( concepts::CPointFunctor<TPointFunctor> ));
@@ -183,7 +183,7 @@ namespace DGtal
     //intern data types
     typedef std::pair<Point, Value> PointValue; 
     typedef std::set<PointValue,
-		     details::PointValueCompare<PointValue> > CandidatePointSet; 
+		     detail::PointValueCompare<PointValue> > CandidatePointSet; 
     typedef unsigned long Area;
 
     // ------------------------- Private Datas --------------------------------

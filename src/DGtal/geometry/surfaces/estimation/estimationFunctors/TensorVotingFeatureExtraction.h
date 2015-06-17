@@ -90,6 +90,7 @@ namespace DGtal
       myId.identity();
       myArea = 0.0;
       myFirstSurfel = true;
+      myAccum.constant(0.0);
     }
 
     /**
@@ -129,7 +130,7 @@ namespace DGtal
               matnorm += maxcol;
             }
         
-          myAccum = (myId - myVote/matnorm)*aDistance;
+          myAccum += (myId - myVote/matnorm)*aDistance;
         }
     }
 
@@ -153,9 +154,9 @@ namespace DGtal
       {
         ASSERT ( std::abs(eigenValues[i_dim - 1]) <= std::abs(eigenValues[i_dim]) );
       }
-#endif
 
       trace.warning()<< "Eigen values= "<< eigenvalues<< std::endl;
+#endif
       
       return ((eigenvalues[0] + eigenvalues[1])/(eigenvalues[2]));
     }
@@ -168,6 +169,7 @@ namespace DGtal
     {
       myArea = 0.0;
       myFirstSurfel = true;
+      myAccum.constant(0.0);
     }
 
 

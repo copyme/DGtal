@@ -149,7 +149,7 @@ public:
 
   typedef functors::ConstValueCell<Value, Spel> KernelSpelFunctor;
   typedef ImplicitBall<Space> KernelSupport;
-  typedef EuclideanShapesMinus< KernelSupport, KernelSupport > EuclideanMinus;
+  typedef EuclideanShapesCSG< KernelSupport, KernelSupport > EuclideanMinus;
   typedef GaussDigitizer< Space, KernelSupport > DigitalShapeKernel;
   typedef GaussDigitizer< Space, EuclideanMinus > DigitalShape;
 
@@ -160,8 +160,8 @@ public:
   typedef typename Matrix::Component Component;
   typedef double Scalar;
   BOOST_CONCEPT_ASSERT (( concepts::CCellFunctor< ShapeSpelFunctor > ));
-  BOOST_CONCEPT_ASSERT (( CUnaryFunctor< CovarianceMatrixFunctor, Matrix, Quantity > ));
-  BOOST_STATIC_ASSERT (( ConceptUtils::SameType< typename Convolver::CovarianceMatrix, 
+  BOOST_CONCEPT_ASSERT (( concepts::CUnaryFunctor< CovarianceMatrixFunctor, Matrix, Quantity > ));
+  BOOST_STATIC_ASSERT (( concepts::ConceptUtils::SameType< typename Convolver::CovarianceMatrix, 
                                                  typename CovarianceMatrixFunctor::Argument >::value ));
 
 

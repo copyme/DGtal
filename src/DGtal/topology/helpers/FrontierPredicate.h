@@ -68,7 +68,7 @@ namespace DGtal {
     // ----------------------- public types ------------------------------
   public:
     BOOST_CONCEPT_ASSERT(( concepts::CCellularGridSpaceND< TKSpace > ));
-    BOOST_CONCEPT_ASSERT(( CConstImage< TImage > ));
+    BOOST_CONCEPT_ASSERT(( concepts::CConstImage< TImage > ));
     typedef TKSpace KSpace;
     typedef TImage Image;
     typedef typename KSpace::Surfel Surfel;
@@ -77,7 +77,7 @@ namespace DGtal {
     typedef typename Image::Value Value;
     // KSpace::Point same type as Image::Point
     BOOST_STATIC_ASSERT
-    (( ConceptUtils::SameType< typename KSpace::Point,
+    (( concepts::ConceptUtils::SameType< typename KSpace::Point,
        typename Image::Point>::value ));
                                                  
 

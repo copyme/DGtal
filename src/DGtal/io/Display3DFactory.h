@@ -84,6 +84,11 @@ namespace DGtal
   struct Display3DFactory
   {
 
+    ///The ball radius (the actual radius being 1/POINT_AS_BALL_RADIUS )when used to display a 3D point.
+    BOOST_STATIC_CONSTANT(unsigned int, POINT_AS_BALL_RADIUS = 5);
+    ///The ball resolution when used to display a point
+    BOOST_STATIC_CONSTANT(unsigned int, POINT_AS_BALL_RES = 5);
+    
     typedef TSpace Space;
     typedef TKSpace KSpace;
     typedef Display3DFactory<Space, KSpace> Self;
@@ -92,10 +97,10 @@ namespace DGtal
     typedef typename Display::RealVector RealVector;
 
     // DiscreteExteriorCalculus
-    template <Dimension dim, typename TLinearAlgebraBackend, typename TInteger>
+    template <Dimension dimEmbedded, Dimension dimAmbient, typename TLinearAlgebraBackend, typename TInteger>
     static
     void
-    draw(Display3D<Space, KSpace>& display, const DGtal::DiscreteExteriorCalculus<dim, TLinearAlgebraBackend, TInteger>& calculus);
+    draw(Display3D<Space, KSpace>& display, const DGtal::DiscreteExteriorCalculus<dimEmbedded, dimAmbient, TLinearAlgebraBackend, TInteger>& calculus);
     // DiscreteExteriorCalculus
 
     // KForm
@@ -103,6 +108,11 @@ namespace DGtal
     static
     void
     draw(Display3D<Space, KSpace>& display, const DGtal::KForm<Calculus, order, duality>& kform, double cmap_min = 0, double cmap_max = 0);
+
+    template <typename Calculus, DGtal::Order order, DGtal::Duality duality, typename ColorMap>
+    static
+    void
+    drawWithColorMap(Display3D<Space, KSpace>& display, const DGtal::KForm<Calculus, order, duality>& kform, const ColorMap& colormap);
     // KForm
 
     // VectorField
@@ -643,6 +653,24 @@ namespace DGtal
     static void
     draw( Display & display, const DGtal::TransformedPrism & aTransformedPrism);
 
+    /**
+     * Set the "OpenGL name" of future graphical commands.
+     * @param display the display where to draw
+     * @param aName3d an object storing the "OpenGL" name.
+     */
+    static void 
+    draw( Display & display, const DGtal::SetName3D& aName3d );
+
+    /**
+     * Set the callback function when selecting an object (e.g. shift
+     * + left click in QGLViewer).
+     *
+     * @param display the display where to draw
+     * @param aFct an object storing the callback function.
+     */
+    static void 
+    draw( Display & display, const DGtal::SetSelectCallback3D& aFct );
+    
   }; // end of struct Display3DFactory
 
 } // namespace DGtal

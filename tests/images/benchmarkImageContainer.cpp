@@ -68,12 +68,12 @@ BENCHMARK_TEMPLATE(BM_Constructor, ImageMap2)->Range(1<<3 , 1 << 16);
 BENCHMARK_TEMPLATE(BM_Constructor, ImageHash2)->Range(1<<3 , 1 << 16);
 
 template<typename Point>
-std::set<Point> ConstructRandomSet(int size, int maxWidth) {
+std::set<Point> ConstructRandomSet(unsigned int size, unsigned int maxWidth) {
   std::set<Point> s;
   Point p;
-  for (int i = 0; i < size; ++i)
+  for (unsigned int i = 0; i < size; ++i)
     {
-      for(int j=0; j < Point::dimension; j++)
+      for(unsigned int j=0; j < Point::dimension; j++)
         p[j] = rand() % maxWidth;
       s.insert( p );
     }
@@ -114,7 +114,7 @@ template<typename Q>
 static void BM_RangeScan(benchmark::State& state)
 {
   std::set<typename Q::Point> data = ConstructRandomSet<typename Q::Point>(state.range_x(),state.range_x());
-
+  int sum=0;
   while (state.KeepRunning())
     {
       state.PauseTiming();
@@ -127,9 +127,11 @@ static void BM_RangeScan(benchmark::State& state)
       state.ResumeTiming();
       for(typename Q::Range::ConstIterator it = image.range().begin(), itend=image.range().end();
           it != itend; ++it)
-        CHECK( *it   != std::numeric_limits<int>::max()); //to prevent
-                                                          //compiler optimization
+        benchmark::DoNotOptimize(sum += *it);   //to prevent compiler optimization
     }
+  std::stringstream ss;
+  ss << sum;
+  state.SetLabel(ss.str());
 }
 BENCHMARK_TEMPLATE(BM_RangeScan, ImageVector2)->Range(1<<3 , 1 << 10);
 BENCHMARK_TEMPLATE(BM_RangeScan, ImageMap2)->Range(1<<3 , 1 << 10);
@@ -138,7 +140,7 @@ template<typename Q>
 static void BM_DomainScan(benchmark::State& state)
 {
   std::set<typename Q::Point> data = ConstructRandomSet<typename Q::Point>(state.range_x(),state.range_x());
-
+  int sum=0;
   while (state.KeepRunning())
     {
       state.PauseTiming();
@@ -151,9 +153,11 @@ static void BM_DomainScan(benchmark::State& state)
       state.ResumeTiming();
       for(typename Q::Domain::ConstIterator it = image.domain().begin(), itend=image.domain().end();
           it != itend; ++it)
-        CHECK( image(*it)   != std::numeric_limits<int>::max()); //to prevent
-      //compiler optimization
+        benchmark::DoNotOptimize( sum ++ );
     }
+  std::stringstream ss;
+  ss << sum;
+  state.SetLabel(ss.str());
 }
 BENCHMARK_TEMPLATE(BM_DomainScan, ImageVector2)->Range(1<<3 , 1 << 10);
 BENCHMARK_TEMPLATE(BM_DomainScan, ImageMap2)->Range(1<<3 , 1 << 10);

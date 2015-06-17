@@ -13,8 +13,9 @@ SET(TESTS_SURFACES_SRC
   testIntegralInvariantVolumeEstimator
   testIntegralInvariantCovarianceEstimator
   testLocalEstimatorFromFunctorAdapter
-  testVoronoiCovarianceMeasureOnSurface
+  ##testVoronoiCovarianceMeasureOnSurface
   testTensorVoting
+  testEstimatorCache
   )
 
 FOREACH(FILE ${TESTS_SURFACES_SRC})
@@ -46,6 +47,17 @@ if (  WITH_VISU3D_QGLVIEWER )
   ENDFOREACH(FILE)
 endif ( WITH_VISU3D_QGLVIEWER   )
 
+
+
+if ( WITH_PATATE )
+    SET(PATATE_TESTS_SRC
+      testSphereFitting )
+    FOREACH(FILE ${PATATE_TESTS_SRC})
+      add_executable(${FILE} ${FILE})
+      target_link_libraries (${FILE} DGtal DGtalIO ${DGtalLibDependencies})
+      add_test(${FILE} ${FILE})
+    ENDFOREACH(FILE)
+endif()
 
 #-----------------------
 #GMP based tests

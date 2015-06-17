@@ -71,9 +71,8 @@ namespace DGtal
    * the estimated quantity is computed applying a functor on the
    * surfel set.
    *
-   *
-   * More precisely, this adapter needs a model of CMetric to define
-nc* the neighborhood and a model of CLocalEstimatorFromSurfelFunctor
+   * More precisely, this adapter needs a model of CMetric to define 
+   * the neighborhood and a model of CLocalEstimatorFromSurfelFunctor
    * to perform the local estimator computation. When sent to the
    * functor, the surfels are weighted using the distance from the
    * kernel boundary: weights are defined in [0,1] interval, 1 for the
@@ -82,10 +81,6 @@ nc* the neighborhood and a model of CLocalEstimatorFromSurfelFunctor
    * distance-to-weight function is defined by a functor of type @e
    * TConvolutionFunctor.
    *
-   * Models of TConvolutionFunctor could be for instance
-   * functors::Identity (returns the distance itself),
-   * ConstValue (returns a constant value) or
-   * GaussianKernel (parametrized by a sigma).
    *
    * During the @e init() method, we thus specify the gridstep @e h
    * and the radius of the ball to consider to define the
@@ -112,7 +107,7 @@ nc* the neighborhood and a model of CLocalEstimatorFromSurfelFunctor
     ///Concept Checks
     BOOST_CONCEPT_ASSERT(( concepts::CMetricSpace<TMetric>));
     BOOST_CONCEPT_ASSERT(( concepts::CLocalEstimatorFromSurfelFunctor<TFunctorOnSurfel>));
-    BOOST_CONCEPT_ASSERT(( CUnaryFunctor<TConvolutionFunctor,double,double> ));
+    BOOST_CONCEPT_ASSERT(( concepts::CUnaryFunctor<TConvolutionFunctor,double,double> ));
     BOOST_CONCEPT_ASSERT(( concepts::CDigitalSurfaceContainer<TDigitalSurfaceContainer> ));
 
     ///Digital surface container type
@@ -139,6 +134,10 @@ nc* the neighborhood and a model of CLocalEstimatorFromSurfelFunctor
     ///Digital surface type
     typedef DigitalSurface< DigitalSurfaceContainer > Surface;
 
+    ///Surfel type
+    typedef typename DigitalSurfaceContainer::Surfel Surfel;
+    
+    
   private:
 
     ///Embedded and type definitions
@@ -175,6 +174,33 @@ nc* the neighborhood and a model of CLocalEstimatorFromSurfelFunctor
       ConstAlias<ConvolutionFunctor> aConvolutionFunctor );
 
     /**
+     * Copy constructor.
+     * @param other the object to clone.
+     * Forbidden by default.
+     */
+    LocalEstimatorFromSurfelFunctorAdapter ( const LocalEstimatorFromSurfelFunctorAdapter & other ):
+      mySurface(other.mySurface), myFunctor(other.myFunctor), myMetric(other.myMetric),
+      myEmbedder(other.myEmbedder), myConvFunctor(other.myConvFunctor)
+    {  }
+    
+
+    /**
+     * Assignment.
+     * @param other the object to copy.
+     * @return a reference on 'this'.
+     * Forbidden by default.
+     */
+    LocalEstimatorFromSurfelFunctorAdapter & operator= ( const LocalEstimatorFromSurfelFunctorAdapter & other )
+    {
+      mySurface = other.mySurface;
+      myFunctor = other.myFunctor;
+      myMetric = other.myMetric;
+      myEmbedder = other.myEmbedder;
+      myConvFunctor = other.myConvFunctor;
+      return *this;
+    }
+    
+    /*
      * Destructor.
      */
     ~LocalEstimatorFromSurfelFunctorAdapter();
@@ -210,17 +236,19 @@ nc* the neighborhood and a model of CLocalEstimatorFromSurfelFunctor
      * function of the distance to the surfel.
      */
     void setParams( ConstAlias<TMetric> aMetric,
-      Alias<FunctorOnSurfel>  aFunctor,
-      ConstAlias<ConvolutionFunctor> aConvolutionFunctor );
+                    Alias<FunctorOnSurfel>  aFunctor,
+                    ConstAlias<ConvolutionFunctor> aConvolutionFunctor,
+                    const Value radius);
 
     /**
      * Initialisation of estimator parameters.
-     * @param [in] _h grid size (must be >0).
-     * @param [in] radius radius of the ball kernel.
      *
+     * @param[in] _h grid size (must be >0).
+     * @param[in] itb iterator after the last surfel of the surface.
+     * @param[in] ite iterator on the first surfel of the surface.
      */
-    void init(const double _h,
-              const Value radius);
+    template<typename SurfelConstIterator>
+    void init(const double _h, SurfelConstIterator itb, SurfelConstIterator ite);
 
 
     /**
@@ -259,20 +287,6 @@ nc* the neighborhood and a model of CLocalEstimatorFromSurfelFunctor
 
   private:
 
-    /**
-     * Copy constructor.
-     * @param other the object to clone.
-     * Forbidden by default.
-     */
-    LocalEstimatorFromSurfelFunctorAdapter ( const LocalEstimatorFromSurfelFunctorAdapter & other );
-
-    /**
-     * Assignment.
-     * @param other the object to copy.
-     * @return a reference on 'this'.
-     * Forbidden by default.
-     */
-    LocalEstimatorFromSurfelFunctorAdapter & operator= ( const LocalEstimatorFromSurfelFunctorAdapter & other );
 
     // ------------------------- Internals ------------------------------------
   private:
@@ -312,7 +326,6 @@ nc* the neighborhood and a model of CLocalEstimatorFromSurfelFunctor
   template <typename TD, typename TV, typename TF, typename TC>
   std::ostream&
   operator<< ( std::ostream & out, const LocalEstimatorFromSurfelFunctorAdapter<TD,TV,TF,TC> & object );
-
 } // namespace DGtal
 
 
