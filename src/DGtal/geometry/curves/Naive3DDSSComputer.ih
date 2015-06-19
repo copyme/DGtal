@@ -266,7 +266,10 @@ DGtal::Naive3DDSSComputer<TIterator,TInteger,connectivity>::extendFront()
             lenXY++;
         }
         else
+	{
+	    myXYalgo.retractFront();
             blockXY = true;
+	}
     }
     if ( myXZalgo.isExtendableFront() && !blockXZ )
     {
@@ -278,7 +281,10 @@ DGtal::Naive3DDSSComputer<TIterator,TInteger,connectivity>::extendFront()
             lenXZ++;
         }
         else
+	{
+	    myXZalgo.retractFront();
             blockXZ = true;
+	}
     }
     if ( myYZalgo.isExtendableFront() && !blockYZ )
     {
@@ -290,7 +296,10 @@ DGtal::Naive3DDSSComputer<TIterator,TInteger,connectivity>::extendFront()
             lenYZ++;
         }
         else
+	{
+	    myYZalgo.retractFront();
             blockYZ = true;
+	}
     }
     if ( test >= 2 )
     {
