@@ -47,7 +47,7 @@ template <typename TIterator, typename TInteger, unsigned short adjacency>
 inline
 DGtal::ArithmeticalDSSComputer<TIterator,TInteger,adjacency>::
 ArithmeticalDSSComputer()
-  : myDSS( Point(0,0) ), myBegin(), myEnd()
+: myDSS( Point(0,0) ), myBegin(), myEnd()
 {
 }
 
@@ -57,7 +57,7 @@ template <typename TIterator, typename TInteger, unsigned short adjacency>
 inline
 DGtal::ArithmeticalDSSComputer<TIterator,TInteger,adjacency>::
 ArithmeticalDSSComputer(const ConstIterator& it)
-  : myDSS( *it ), myBegin(it), myEnd(it)
+: myDSS( *it ), myBegin(it), myEnd(it)
 {
   ++myEnd; 
 }
@@ -80,7 +80,7 @@ template <typename TIterator, typename TInteger, unsigned short adjacency>
 inline
 DGtal::ArithmeticalDSSComputer<TIterator,TInteger,adjacency>::
 ArithmeticalDSSComputer ( const ArithmeticalDSSComputer<TIterator,TInteger,adjacency> & other ) 
-  : myDSS(other.myDSS), myBegin(other.myBegin), myEnd(other.myEnd)
+: myDSS(other.myDSS), myBegin(other.myBegin), myEnd(other.myEnd)
 {
 }
 
@@ -92,11 +92,11 @@ DGtal::ArithmeticalDSSComputer<TIterator,TInteger,adjacency>::
 operator=( const ArithmeticalDSSComputer<TIterator,TInteger,adjacency> & other )
 {
   if ( this != &other )
-    {
-      myDSS = other.myDSS;
-      myBegin = other.myBegin; 
-      myEnd = other.myEnd; 
-    }
+  {
+    myDSS = other.myDSS;
+    myBegin = other.myBegin; 
+    myEnd = other.myEnd; 
+  }
   return *this;
 }
 
@@ -128,8 +128,8 @@ DGtal::ArithmeticalDSSComputer<TIterator,TInteger,adjacency>::
 operator==( const ArithmeticalDSSComputer<TIterator,TInteger,adjacency>& other ) const 
 {
   return ( (myBegin == other.myBegin) 
-	   && (myEnd == other.myEnd) 
-	   && (myDSS == other.myDSS) ); 
+  && (myEnd == other.myEnd) 
+  && (myDSS == other.myDSS) ); 
 }
 
 //-----------------------------------------------------------------------------
@@ -172,10 +172,10 @@ bool
 DGtal::ArithmeticalDSSComputer<TIterator,TInteger,adjacency>::extendFront()
 {
   if (myDSS.extendFront(*myEnd))
-    {
-      ++myEnd;
-      return true; 
-    }
+  {
+    ++myEnd;
+    return true; 
+  }
   else 
     return false;  
 }
@@ -189,10 +189,10 @@ DGtal::ArithmeticalDSSComputer<TIterator,TInteger,adjacency>::extendBack()
   ConstIterator it = myBegin; 
   --it; 
   if (myDSS.extendBack(*it))
-    {
-      myBegin = it;
-      return true; 
-    }
+  {
+    myBegin = it;
+    return true; 
+  }
   else 
     return false;  
 }
@@ -204,10 +204,10 @@ bool
 DGtal::ArithmeticalDSSComputer<TIterator,TInteger,adjacency>::retractFront()
 {
   if (myDSS.retractFront())
-    {
-      --myEnd; 
-      return true; 
-    }
+  {
+    --myEnd; 
+    return true; 
+  }
   else 
     return false;  
 }
@@ -219,10 +219,10 @@ bool
 DGtal::ArithmeticalDSSComputer<TIterator,TInteger,adjacency>::retractBack()
 {
   if (myDSS.retractBack())
-    {
-      ++myBegin;
-      return true; 
-    }
+  {
+    ++myBegin;
+    return true; 
+  }
   else 
     return false;  
 }
@@ -445,7 +445,7 @@ template <typename TIterator, typename TInteger>
 inline
 DGtal::StandardDSS4Computer<TIterator,TInteger>::
 StandardDSS4Computer()
-  : Super()
+: Super()
 {
 }
 
@@ -455,7 +455,7 @@ template <typename TIterator, typename TInteger>
 inline
 DGtal::StandardDSS4Computer<TIterator,TInteger>::
 StandardDSS4Computer(const typename Super::ConstIterator& it)
-  : Super(it)
+: Super(it)
 {
 }
 
@@ -464,7 +464,7 @@ template <typename TIterator, typename TInteger>
 inline
 DGtal::StandardDSS4Computer<TIterator,TInteger>::
 StandardDSS4Computer ( const StandardDSS4Computer<TIterator,TInteger> & other ) 
-  : Super(other)
+: Super(other)
 {
 }
 
@@ -485,7 +485,7 @@ template <typename TIterator, typename TInteger>
 inline
 DGtal::NaiveDSS8Computer<TIterator,TInteger>::
 NaiveDSS8Computer()
-  : Super()
+: Super()
 {
 }
 
@@ -495,7 +495,7 @@ template <typename TIterator, typename TInteger>
 inline
 DGtal::NaiveDSS8Computer<TIterator,TInteger>::
 NaiveDSS8Computer(const typename Super::ConstIterator& it)
-  : Super(it)
+: Super(it)
 {
 }
 
@@ -504,7 +504,7 @@ template <typename TIterator, typename TInteger>
 inline
 DGtal::NaiveDSS8Computer<TIterator,TInteger>::
 NaiveDSS8Computer ( const NaiveDSS8Computer<TIterator,TInteger> & other ) 
-  : Super(other)
+: Super(other)
 {
 }
 
