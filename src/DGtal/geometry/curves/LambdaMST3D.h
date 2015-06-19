@@ -90,7 +90,7 @@ public:
         dssSegments = &aSC;
     }
 
-    void setLengthFilter ( const unsigned int & lenFi )
+    void setLengthFilter ( const double & lenFi )
     {
       lenFilter = lenFi;
     }
