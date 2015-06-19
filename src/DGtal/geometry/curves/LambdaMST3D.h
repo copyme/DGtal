@@ -105,6 +105,7 @@ public:
      * @param point to calculate A and B for it
      * @return A and B
      */
+    //! \todo Cleanups
     RealVector eval ( const Point & point )
     {
       assert ( isValid() );

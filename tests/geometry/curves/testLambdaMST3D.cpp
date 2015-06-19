@@ -36,6 +36,7 @@
 #include "DGtal/helpers/StdDefs.h"
 #include "DGtal/geometry/curves/Naive3DDSSComputer.h"
 #include "DGtal/geometry/curves/LambdaMST3D.h"
+#include "DGtal/geometry/curves/LambdaMST3DBy2D.h"
 #include "DGtal/curves/ParametricCurveDigitizer3D.h"
 #include "DGtal/curves/parametric/EllipticHelix.h"
 #include "DGtal/geometry/curves/SaturatedSegmentation.h"
@@ -58,12 +59,17 @@ class testLambdaMST3D
 {
     typedef EllipticHelix < Z3i::Space > MyHelix;
     typedef DGtal::Z3i::Point Point;
+    typedef DGtal::Z2i::Point Point2D;
     typedef std::vector < Point > Range;
+    typedef std::list < Point2D > Range2D;
     typedef Range::const_iterator ConstIterator;
+    typedef Range2D::const_iterator ConstIterator2D;
     typedef ParametricCurveDigitizer3D < MyHelix >  Digitizer;
-    typedef ParametricCurveDigitizer3D < MyHelix >::DigitalCurve MyDigitalCurve;
+    typedef Digitizer::DigitalCurve MyDigitalCurve;
     typedef Naive3DDSSComputer < ConstIterator, int, 8 > SegmentComputer;
     typedef SaturatedSegmentation<SegmentComputer> Segmentation;
+    typedef ArithmeticalDSSComputer < ConstIterator2D, int, 8 > SegmentComputer2D;
+    typedef SaturatedSegmentation<SegmentComputer2D> Segmentation2D;
 private:
     Digitizer digitizer;
     MyHelix helix;
@@ -111,6 +117,13 @@ public:
                 return false;
         }
         return true;
+    }
+    bool lambda64By2D()
+    {
+      LambdaMST3DBy2D < typename MyDigitalCurve::const_iterator > lmst64;
+      lmst64.init ( digitalCurve.begin(), digitalCurve.end() );
+      lmst64.eval ( digitalCurve.front() );
+      return true;
     }
 };
 

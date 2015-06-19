@@ -72,7 +72,6 @@ template <typename TSpace, typename TFunctor, typename TInputValue, typename TOu
 class ForwardRigidTransformation3D : std::unary_function <TInputValue, TOutputValue>
 {
     ///Checking concepts
-    BOOST_CONCEPT_ASSERT(( CUnaryFunctor<TFunctor, TInputValue, TOutputValue> ));
     BOOST_CONCEPT_ASSERT(( concepts::CSpace<TSpace> ));
     BOOST_STATIC_ASSERT(( TSpace::dimension == 3 ));
     BOOST_STATIC_ASSERT(( TOutputValue::dimension == 3 ));
@@ -145,7 +144,6 @@ template <typename TSpace, typename TFunctor, typename TInputValue, typename TOu
 class QuaternionRotation : std::unary_function <TInputValue, TOutputValue>
 {
     ///Checking concepts
-    BOOST_CONCEPT_ASSERT(( CUnaryFunctor<TFunctor, TInputValue, TOutputValue> ));
     BOOST_CONCEPT_ASSERT(( concepts::CSpace<TSpace> ));
     BOOST_STATIC_ASSERT(( TSpace::dimension == 3 ));
     BOOST_STATIC_ASSERT(( TOutputValue::dimension == 3 ));
@@ -210,7 +208,6 @@ template <typename TSpace, typename TFunctor, typename TInputValue, typename TOu
 class BackwardRigidTransformation3D : std::unary_function <TInputValue, TOutputValue>
 {
     ///Checking concepts
-    BOOST_CONCEPT_ASSERT(( CUnaryFunctor<TFunctor, TInputValue, TOutputValue> ));
     BOOST_CONCEPT_ASSERT(( concepts::CSpace<TSpace> ));
     BOOST_STATIC_ASSERT(( TSpace::dimension == 3 ));
     BOOST_STATIC_ASSERT(( TOutputValue::dimension == 3 ));
