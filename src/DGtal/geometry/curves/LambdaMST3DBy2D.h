@@ -38,43 +38,41 @@
 
 #include <algorithm>
 #include <cmath>
-#include <vector>
-#include <map>
+#include <list>
 #include <DGtal/base/Common.h>
 #include <DGtal/helpers/StdDefs.h>
 #include "DGtal/kernel/CSpace.h"
 #include "DGtal/kernel/PointVector.h"
-#include "DGtal/geometry/curves/CIncrementalSegmentComputer.h"
 #include "DGtal/kernel/BasicPointFunctors.h"
 #include "DGtal/geometry/curves/LambdaMST2D.h"
+#include "DGtal/geometry/curves/ArithmeticalDSSComputer.h"
+#include "DGtal/geometry/curves/SaturatedSegmentation.h"
 
 namespace DGtal {
 
-  template < typename TSegmentationXY, typename TSegmentationXZ, typename TSegmentationYZ, typename Iterator, typename Functor >
+template < typename Iterator3D, typename Functor >
 class LambdaMST3DBy2DEstimator
 {
 public:
-    ///Checking concepts
-    BOOST_CONCEPT_ASSERT(( CIncrementalSegmentComputer<typename TSegmentationXY::SegmentComputer> ));
-    BOOST_CONCEPT_ASSERT(( CIncrementalSegmentComputer<typename TSegmentationXZ::SegmentComputer> ));
-    BOOST_CONCEPT_ASSERT(( CIncrementalSegmentComputer<typename TSegmentationYZ::SegmentComputer> ));
     // ----------------------- Types ------------------------------
 public:
-    typedef TSegmentationXY SegmentationXY;
-    typedef TSegmentationXZ SegmentationXZ;
-    typedef TSegmentationYZ SegmentationYZ;
-    typedef typename TSegmentationXY::SegmentComputer SegmentComputerXY;
-    typedef typename TSegmentationXZ::SegmentComputer SegmentComputerXZ;
-    typedef typename TSegmentationYZ::SegmentComputer SegmentComputerYZ;
     typedef PointVector<3, double> RealVector3D;
     typedef PointVector<3, int> Point3D;
     typedef PointVector<2, int> Point2D;
+    typedef PointVector<2, double> RealVector2D;
+    typedef std::list<Point2D> TCurve2D;
+    typedef ArithmeticalDSSComputer < typename TCurve2D::const_iterator, int, 8 > SegmentComputer2D;
+    typedef SaturatedSegmentation<SegmentComputer2D> Segmentation2D;
+    
+    // ----------------------- Private types ------------------------------
+private:
+    typedef LambdaMST2D < Segmentation2D > TEstimator;
     typedef typename Functor::MAIN_AXIS MAIN_AXIS;
     typedef functors::Projector < SpaceND < 2, int > > Projector2d;
 
   // ----------------------- Standard services ------------------------------
 public:
-  LambdaMST3DBy2DEstimator(): myBegin(), myEnd(), dssSegmentsXY ( 0 ), dssSegmentsXZ ( 0 ), dssSegmentsYZ ( 0 ) 
+  LambdaMST3DBy2DEstimator(): myBegin(), myEnd()
   {
     //projections
     std::vector<DGtal::Dimension> v1,v2,v3;
@@ -94,24 +92,10 @@ public:
      * @param itb, begin iterator
      * @param ite, end iterator
      */
-    void init ( const Iterator& itb, const Iterator& ite )
+    void init ( const Iterator3D & itB, const Iterator3D & itE )
     {
-        myBegin = itb;
-        myEnd = ite; 
-    }
-    
-    /**
-     * @param segment - DSS segmentation algorithm
-     */
-    void attach ( const TSegmentationXY & aSCXY, const TSegmentationXZ & aSCXZ, const TSegmentationYZ & aSCYZ )
-    {
-        dssSegmentsXY = &aSCXY;
-        dssSegmentsXZ = &aSCXZ;
-        dssSegmentsYZ = &aSCYZ;
-	
-	lmst64XY.attach ( *dssSegmentsXY );
-	lmst64XZ.attach ( *dssSegmentsXZ );
-	lmst64YZ.attach ( *dssSegmentsYZ );
+      myBegin = itB;
+      myEnd = itE;
     }
 
     /**
@@ -121,31 +105,24 @@ public:
     RealVector3D eval ( const Point3D & point )
     {
       assert ( isValid() );
-      MAIN_AXIS axis = detectMainAxis ( point );
-      RealVector3D tangent;
-      typename LambdaMST2D<SegmentationXY>::RealVector v0;
-      typename LambdaMST2D<SegmentationXY>::RealVector v1;
-      lmst64XY.eval ( myProjXY ( point ) );
-      if ( axis == MAIN_AXIS::XY )
-      {
-	v0 = lmst64XY.eval ( myProjXY ( point ) );
-	v1 = lmst64XZ.eval ( myProjXZ ( point ) );
-      }
-      else if ( axis == MAIN_AXIS::XZ )
-      {
-	v0 = lmst64XY.eval ( myProjXY ( point ) );
-	v1 = lmst64YZ.eval ( myProjYZ ( point ) );
-      }
+      Iterator3D it = std::find ( myBegin, myEnd, point );
+      TCurve2D tXY, tXZ, tYZ;
+    
+      ExtendBack ( tXY, tXZ, tYZ, it );
+      ExtendFront ( tXY, tXZ, tYZ, it );
+      
+      MAIN_AXIS axis = detectMainAxis ( tXY, tXZ, tYZ, point );
+      if ( axis == MAIN_AXIS::X )
+	return myFunctor ( MAIN_AXIS::X, Estimate2DTangent ( tXY, myProjXY ( *it ) ), Estimate2DTangent ( tXZ, myProjXZ ( *it ) ) );
+      else if ( axis == MAIN_AXIS::Y )
+	return myFunctor ( MAIN_AXIS::Y, Estimate2DTangent ( tXY, myProjXY ( *it ) ), Estimate2DTangent ( tYZ, myProjYZ ( *it ) ) );
       else
-      {
-	v0 = lmst64XZ.eval ( myProjXZ ( point ) );
-	v1 = lmst64YZ.eval ( myProjYZ ( point ) );
-      }
-      return myFunctor ( axis, v0, v1 );
+	return myFunctor ( MAIN_AXIS::Z, Estimate2DTangent ( tXZ, myProjXZ ( *it ) ), Estimate2DTangent ( tYZ, myProjYZ ( *it ) ) );
     }
 
     /**
      * @param result output iterator on the estimated quantity
+     * @todo find better algorithm
      *
      * @return the estimated quantity
      * from itb till ite (excluded)
@@ -153,13 +130,13 @@ public:
     template <typename ResultType>
     void eval ( std::vector<ResultType> & result )
     {
-      assert ( myBegin != myEnd && isValid() );
-      for( Iterator it = myBegin; it != myEnd; ++it )
+      assert ( isValid() );
+      for( Iterator3D it = myBegin; it != myEnd; ++it )
       {
 	RealVector3D tan = eval ( *it );
 	if ( result.size() > 0 && tan.cosineSimilarity ( result.back() ) > M_PI_2 )
-	  tan -= tan;
-	result.push_baCk ( tan );
+	  tan = -tan;
+	result.push_back ( tan );
       }
     }
     
@@ -172,43 +149,125 @@ public:
    */
     bool isValid() const
     {
-        return ( dssSegmentsXY && dssSegmentsXZ && dssSegmentsYZ );
+        return ( myBegin != myEnd );
     }
     
     // ------------------------- Internals ------------------------------------
 protected:
+  
   inline
-  MAIN_AXIS detectMainAxis ( const Point3D & p )
+  MAIN_AXIS detectMainAxis ( const TCurve2D & tXY, const TCurve2D & tXZ, const TCurve2D & tYZ,
+			     const Point3D & point )
   {
-    unsigned int rankXY = 0, rankXZ = 0, rankYZ = 0;
-    for ( typename SegmentationXY::SegmentComputerIterator it = dssSegmentsXY->begin(); it != dssSegmentsXY->end(); ++it )
-      if ( it->isInDSS ( myProjXY ( p ) ) )
-	rankXY += std::distance ( it->begin(), it->end() );
-    for ( typename SegmentationXZ::SegmentComputerIterator it = dssSegmentsXZ->begin(); it != dssSegmentsXZ->end(); ++it )
-      if ( it->isInDSS ( myProjXZ ( p ) ) )
-	rankXZ += std::distance ( it->begin(), it->end() );
-    for ( typename SegmentationYZ::SegmentComputerIterator it = dssSegmentsYZ->begin(); it != dssSegmentsYZ->end(); ++it )
-      if ( it->isInDSS ( myProjYZ ( p ) ) )
-	rankYZ += std::distance ( it->begin(), it->end() );
-      
-      if ( rankXY > rankYZ && rankXZ > rankYZ )
-	return MAIN_AXIS::XY;
-      else if ( rankXY > rankXZ && rankYZ > rankXZ )
-	return MAIN_AXIS::XZ;
+    unsigned int rankXY = CurveRank ( tXY, myProjXY ( point ) );
+    unsigned int rankXZ = CurveRank ( tXZ, myProjXZ ( point ) );
+    unsigned int rankYZ = CurveRank ( tYZ, myProjYZ ( point ) );
+    if ( rankXY > rankYZ && rankXZ > rankYZ )
+      return MAIN_AXIS::X;
+    else if ( rankXY > rankXZ && rankYZ > rankXZ )
+      return MAIN_AXIS::Y;
+    else
+      return MAIN_AXIS::Z;
+  }
+  
+  unsigned int CurveRank ( const TCurve2D & curve, const Point2D & point )
+  {
+    unsigned int rank = 0;
+    Segmentation2D segmenter ( curve.begin(), curve.end(), SegmentComputer2D() );
+    for ( typename Segmentation2D::SegmentComputerIterator it = segmenter.begin(); it != segmenter.end(); ++it )
+      if ( it->isInDSS ( point ) )
+	rank += std::distance ( it->begin(), it->end() );
+      return rank;
+  }
+  
+  void ExtendFront ( TCurve2D & curveXY, TCurve2D & curveXZ, TCurve2D & curveYZ, const Iterator3D & it )
+  {
+    Iterator3D front = it;
+    bool status = true, xy = true, xz = true, yz = true;
+    while ( status && front >= myBegin && front < myEnd )
+    {
+      unsigned int test = 0;
+      if ( xy && myProjXY (*front) != curveXY.front() )
+      {
+	curveXY.push_front ( myProjXY ( *front ) );
+	test++;
+      }
       else
-	return MAIN_AXIS::YZ;
+	xy = false;
+      if ( xz && myProjXZ (*front) != curveXZ.front() )
+      {
+	curveXZ.push_front ( myProjXZ ( *front ) );
+	test++;
+      }
+      else
+	xz = false;
+      if ( yz && myProjYZ (*front) != curveYZ.front() )
+      {
+	curveYZ.push_front ( myProjYZ ( *front ) );
+	test++;
+      }
+      else
+	yz = false;
+      if ( test >= 2 )
+      {
+	--front;
+	status = true;
+      }
+      else
+	status = false;
+    }
+  }
+  
+  void ExtendBack ( TCurve2D & curveXY, TCurve2D & curveXZ, TCurve2D & curveYZ, const Iterator3D & it )
+  {
+    Iterator3D back = it; ++back;
+    bool status = true, xy = true, xz = true, yz = true;
+    while ( status && back > myBegin && back < myEnd )
+    {
+      unsigned int test = 0;
+      if ( xy && myProjXY (*back) != curveXY.back() )
+      {
+	curveXY.push_back ( myProjXY ( *back ) );
+	test++;
+      }
+      else
+	xy = false;
+      if ( xz && myProjXZ (*back) != curveXZ.back() )
+      {
+	curveXZ.push_back ( myProjXZ ( *back ) );
+	test++;
+      }
+      else
+	xz = false;
+      if ( yz && myProjYZ (*back) != curveYZ.back() )
+      {
+	curveYZ.push_back ( myProjYZ ( *back ) );
+	test++;
+      }
+      else
+	yz = false;
+      if ( test >= 2 )
+      {
+	++back;
+	status = true;
+      }
+      else
+	status = false;
+    }
+  }
+  
+  RealVector2D Estimate2DTangent ( const TCurve2D & curve, const Point2D & point )
+  {
+    Segmentation2D segmenter ( curve.begin(), curve.end(), SegmentComputer2D() );
+    TEstimator lmst;
+    lmst.attach ( segmenter );
+    return lmst.eval ( point ); 
   }
 
     // ------------------------- Private Datas --------------------------------
 private:
-    Iterator myBegin;
-    Iterator myEnd;
-    const TSegmentationXY * dssSegmentsXY;
-    const TSegmentationXZ * dssSegmentsXZ;
-    const TSegmentationYZ * dssSegmentsYZ;
-    LambdaMST2D < SegmentationXY > lmst64XY;
-    LambdaMST2D < SegmentationXZ > lmst64XZ;
-    LambdaMST2D < SegmentationYZ > lmst64YZ;
+    Iterator3D myBegin;
+    Iterator3D myEnd;
     Functor myFunctor;
     /// projectors
     Projector2d myProjXY, myProjXZ, myProjYZ;
@@ -225,13 +284,13 @@ private:
      // ----------------------- Types ------------------------------
      typedef PointVector<3, double> Vector3D;
      typedef PointVector<2, double> Vector2D;
-     enum MAIN_AXIS {XY = 0, XZ = 1, YZ = 2};
+     enum MAIN_AXIS {X = 0, Y = 1, Z = 2};
      
      // ----------------------- Interface --------------------------------------
      Vector3D operator() ( MAIN_AXIS mainAxis, const Vector2D & v0, const Vector2D & v1 ) const
      {
        Vector3D tangent;
-       if ( mainAxis == XY )
+       if ( mainAxis == X )
        {
 	 if ( v1[0] == 0 || ( v0[1] == 0 && v1[1] == 0 ) )
 	 {
@@ -255,7 +314,7 @@ private:
 	   }
 	 }
        }
-       else if ( mainAxis == XZ )
+       else if ( mainAxis == Y )
        {
 	 if ( v0[1] == 0 || ( v1[1] == 0 && v0[0] == 0 ) )
 	 {
@@ -315,16 +374,11 @@ private:
  *
  */
 template < 
-typename DSSSegmentationComputerXY,
-typename DSSSegmentationComputerXZ, 
-typename DSSSegmentationComputerYZ, 
-typename Iterator >
+typename Iterator3D >
 class LambdaMST3DBy2D:
-public LambdaMST3DBy2DEstimator < DSSSegmentationComputerXY, DSSSegmentationComputerXZ, DSSSegmentationComputerYZ, Iterator,
-  TangentFromDSS3DBy2DFunctor >
+public LambdaMST3DBy2DEstimator < Iterator3D, TangentFromDSS3DBy2DFunctor >
   {
-    typedef LambdaMST3DBy2DEstimator < DSSSegmentationComputerXY, DSSSegmentationComputerXZ, DSSSegmentationComputerYZ, Iterator,
-    TangentFromDSS3DBy2DFunctor > Super;
+    typedef LambdaMST3DBy2DEstimator < Iterator3D, TangentFromDSS3DBy2DFunctor > Super;
     
   public:
     /**
