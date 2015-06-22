@@ -84,7 +84,7 @@ inline
 void
 DGtal::Display3D< Space ,KSpace >::setSpaceEmbedder(CanonicEmbedder<Space> *anEmbedder)
 {
-  delete myEmbedder;
+  if ( myEmbedder != 0 ) delete myEmbedder;
   myEmbedder = anEmbedder;
 }
 
@@ -93,7 +93,7 @@ inline
 void
 DGtal::Display3D< Space ,KSpace >::setKSpaceEmbedder( CanonicCellEmbedder<KSpace> *anEmbedder)
 {
-  delete myCellEmbedder;
+  if ( myCellEmbedder != 0 ) delete myCellEmbedder;
   myCellEmbedder = anEmbedder;
 }
 
@@ -102,7 +102,7 @@ inline
 void
 DGtal::Display3D< Space ,KSpace >::setSKSpaceEmbedder(CanonicSCellEmbedder<KSpace> *anEmbedder)
 {
-  delete mySCellEmbedder;
+  if ( mySCellEmbedder != 0 ) delete mySCellEmbedder;
   mySCellEmbedder = anEmbedder;
 }
 
@@ -1186,6 +1186,7 @@ inline
 typename DGtal::Display3D< Space ,KSpace >::RealPoint
 DGtal::Display3D< Space ,KSpace >::embed( const typename Space::Point & dp ) const
 {
+  ASSERT( myEmbedder != 0 );
   ASSERT( myEmbedder->isValid());
   return myEmbedder->embed(dp);
 }
@@ -1195,6 +1196,7 @@ inline
 typename DGtal::Display3D< Space ,KSpace >::RealPoint
 DGtal::Display3D< Space ,KSpace >::embedKS( const typename KSpace::SCell & scell ) const
 {
+  ASSERT( mySCellEmbedder != 0 );
   ASSERT( mySCellEmbedder->isValid());
   return mySCellEmbedder->embed(scell);
 }
@@ -1204,6 +1206,7 @@ inline
 typename DGtal::Display3D< Space ,KSpace >::RealPoint
 DGtal::Display3D< Space ,KSpace >::embedKS( const TransformedPrism & aTrans ) const
 {
+  ASSERT( mySCellEmbedder != 0 );
   ASSERT( mySCellEmbedder->isValid());
   return mySCellEmbedder->embed(aTrans.mySurfel);
 }
@@ -1214,6 +1217,7 @@ inline
 typename DGtal::Display3D< Space ,KSpace >::RealPoint
 DGtal::Display3D< Space ,KSpace >::embedK( const typename KSpace::Cell & cell ) const
 {
+  ASSERT( myCellEmbedder != 0 );
   ASSERT( myCellEmbedder->isValid());
   return myCellEmbedder->embed(cell);
 }

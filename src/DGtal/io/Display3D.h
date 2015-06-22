@@ -271,9 +271,9 @@ namespace DGtal
      */
     ~Display3D()
     {
-      delete myEmbedder;
-      delete mySCellEmbedder;
-      delete myCellEmbedder;
+      if ( myEmbedder != 0 )      delete myEmbedder;
+      if ( mySCellEmbedder != 0 ) delete mySCellEmbedder;
+      if ( myCellEmbedder != 0 )  delete myCellEmbedder;
     };
 
     /**
@@ -285,10 +285,9 @@ namespace DGtal
       myCurrentFillColor = Color ( 220, 220, 220 );
       myCurrentLineColor = Color ( 22, 22, 222, 50 );
       myBoundingPtEmptyTag = true;
-      myEmbedder= new Embedder();
-      myCellEmbedder = new CellEmbedder();
-      mySCellEmbedder = new SCellEmbedder();
-
+      myEmbedder= new CanonicEmbedder<Space>();
+      myCellEmbedder = 0;
+      mySCellEmbedder = 0;
     }
 
     /**
@@ -300,9 +299,9 @@ namespace DGtal
       myCurrentFillColor = Color ( 220, 220, 220 );
       myCurrentLineColor = Color ( 22, 22, 222, 50 );
       myBoundingPtEmptyTag = true;
-      myEmbedder= new Embedder();
-      myCellEmbedder = new CellEmbedder(KSEmb);
-      mySCellEmbedder = new SCellEmbedder(KSEmb);
+      myEmbedder= new CanonicEmbedder<Space>();
+      myCellEmbedder = new CanonicCellEmbedder<KSpace >(KSEmb);
+      mySCellEmbedder = new CanonicSCellEmbedder<KSpace >(KSEmb);
     };
 
     /**
@@ -315,10 +314,11 @@ namespace DGtal
       myCurrentFillColor = Color ( 220, 220, 220 );
       myCurrentLineColor = Color ( 22, 22, 222, 50 );
       myBoundingPtEmptyTag = true;
-      myEmbedder = new Embedder(Semb);
-      myCellEmbedder = new CellEmbedder(KSEmb);
-      mySCellEmbedder = new SCellEmbedder(KSEmb);
+      myEmbedder = new CanonicEmbedder<Space >(Semb);
+      myCellEmbedder = new CanonicCellEmbedder<KSpace >(KSEmb);
+      mySCellEmbedder = new CanonicSCellEmbedder<KSpace >(KSEmb);
     };
+
 
 
     // ----------------------- Interface --------------------------------------
