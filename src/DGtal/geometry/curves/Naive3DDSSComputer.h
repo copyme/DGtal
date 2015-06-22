@@ -256,6 +256,12 @@ class Naive3DDSSComputer
        algorithm along the plane orthogonal to the \a i-th axis.
     */
     const ArithmeticalDSSComputer2d & arithmeticalDSS2d( Dimension i ) const;
+    
+    /**
+       @ param i the axis orthogonal to the plane
+       @return true if given 2D DSS along orthogonal axis is valid
+     */
+    bool validArithmeticalDSS2d ( Dimension i ) const;
 
 
     // ------------------ Display ------------------------------------------
