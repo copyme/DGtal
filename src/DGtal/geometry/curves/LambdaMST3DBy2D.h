@@ -50,7 +50,7 @@
 
 namespace DGtal {
 
-template < typename Iterator3D, typename Functor >
+  template < typename Iterator3D, typename Functor, typename LambdaFunctor, int CONNECTIVITY = 8 >
 class LambdaMST3DBy2DEstimator
 {
 public:
@@ -61,12 +61,12 @@ public:
     typedef PointVector<2, int> Point2D;
     typedef PointVector<2, double> RealVector2D;
     typedef std::list<Point2D> TCurve2D;
-    typedef ArithmeticalDSSComputer < typename TCurve2D::const_iterator, int, 8 > SegmentComputer2D;
+    typedef ArithmeticalDSSComputer < typename TCurve2D::const_iterator, int, CONNECTIVITY > SegmentComputer2D;
     typedef SaturatedSegmentation<SegmentComputer2D> Segmentation2D;
     
     // ----------------------- Private types ------------------------------
 private:
-    typedef LambdaMST2D < Segmentation2D > TEstimator;
+    typedef LambdaMST2D < Segmentation2D, LambdaFunctor > TEstimator;
     typedef typename Functor::MAIN_AXIS MAIN_AXIS;
     typedef functors::Projector < SpaceND < 2, int > > Projector2d;
 
@@ -374,11 +374,11 @@ private:
  *
  */
 template < 
-typename Iterator3D >
+typename Iterator3D, typename LambdaFunctor = functors::Lambda64Function, int CONNECTIVITY = 8 >
 class LambdaMST3DBy2D:
-public LambdaMST3DBy2DEstimator < Iterator3D, TangentFromDSS3DBy2DFunctor >
+public LambdaMST3DBy2DEstimator < Iterator3D, TangentFromDSS3DBy2DFunctor, LambdaFunctor, CONNECTIVITY >
   {
-    typedef LambdaMST3DBy2DEstimator < Iterator3D, TangentFromDSS3DBy2DFunctor > Super;
+    typedef LambdaMST3DBy2DEstimator < Iterator3D, TangentFromDSS3DBy2DFunctor, LambdaFunctor, CONNECTIVITY > Super;
     
   public:
     /**

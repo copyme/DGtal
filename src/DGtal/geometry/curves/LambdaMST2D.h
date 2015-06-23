@@ -98,6 +98,7 @@ public:
       typename TSegmentation::SegmentComputerIterator DSS = dssSegments->begin();
       typename TSegmentation::SegmentComputerIterator lastDSS = dssSegments->end();
       Value tangent;
+      Value partial;
       bool found = false;
       for ( ; DSS != lastDSS; ++DSS )
       {
@@ -107,15 +108,14 @@ public:
 	  unsigned int pos = std::distance ( DSS.begin(), std::find ( DSS.begin(), DSS.end(), point ) );
 	  unsigned int dssLen = std::distance ( DSS.begin(), DSS.end() );
 	  SegmentComputer comp ( *DSS );
-	  tangent += myFunctor ( comp, pos, dssLen );
+	  partial = myFunctor ( comp, pos, dssLen );
+	  tangent.first += partial.first;
+	  tangent.second += partial.second;
 	}
       }
       if (!found)
 	throw std::runtime_error("Uncovered point!");
-      if ( tangent.eccentricity < 1E-20 )
-	return tangent.vector;
-      else
-	return tangent.vector / tangent.eccentricity;
+      return tangent.first / tangent.second;
     }
 
     /**
@@ -141,11 +141,11 @@ public:
 	typename std::multimap< Point, Value >::const_iterator it2 = outValues.upper_bound ( *itt );
 	Value tangent;
 	for (; it != it2; ++it )
-	  tangent += it->second;
-	if ( tangent.eccentricity < 1E-20 )
-	  result.push_back ( tangent.vector );
-	else
-	  result.push_back ( tangent.vector / tangent.eccentricity );
+	{
+	  tangent.first += it->second.first;
+	  tangent.second += it->second.second;
+	}
+	result.push_back ( tangent.first / tangent.second );
       }
     }
 
@@ -180,37 +180,18 @@ class TangentFromDSS2DFunctor
 {
     // ----------------------- Types ------------------------------
     typedef PointVector<2, double> Vector;
-public:
-    typedef struct LambdaCharacteristics
-    {
-        Vector vector;
-        double eccentricity = 0.0;
-        LambdaCharacteristics & operator+= ( const LambdaCharacteristics & ch )
-        {
-            this->vector += ch.vector;
-            this->eccentricity += ch.eccentricity;
-            return *this;
-        }
-    }Value;
+    typedef std::pair<Vector, double> Value;
 
     // ----------------------- Interface --------------------------------------
 public:
     Value operator() ( const DSS& aDSS, const int & indexOfPointInDSS, const int & dssLen ) const
     {
-        Value result;
-        double norm = std::sqrt ( aDSS.a() * aDSS.a() + aDSS.b() * aDSS.b() );
-        result.eccentricity = lambdaFunctor( (double)indexOfPointInDSS / (double)dssLen );
-        if ( norm > 1E-20 )
-        {
-            result.vector[0] = result.eccentricity * aDSS.a () / norm;
-            result.vector[1] = result.eccentricity * aDSS.b () / norm;
-        }
-        else
-        {
-            result.vector[0] = result.eccentricity * aDSS.a ();
-            result.vector[1] = result.eccentricity * aDSS.b ();
-        }
-        return result;
+      Value result;
+      double norm = std::sqrt ( aDSS.a() * aDSS.a() + aDSS.b() * aDSS.b() );
+      result.second = lambdaFunctor( (double)indexOfPointInDSS / (double)dssLen );
+      result.first[0] = result.second * aDSS.a () / norm;
+      result.first[1] = result.second * aDSS.b () / norm;
+      return result;
     }
 private:
     // ------------------------- Private Datas --------------------------------

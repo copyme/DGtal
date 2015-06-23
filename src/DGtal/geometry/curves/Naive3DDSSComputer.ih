@@ -532,11 +532,11 @@ bool
 DGtal::Naive3DDSSComputer<TIterator,TInteger,connectivity>::validArithmeticalDSS2d( Dimension i ) const
 {
   ASSERT( ( 0 <= i ) && ( i < 3 ) );
-  if ( i == 0 && ( lenYZ > lenXZ || lenYZ > lenXY ) )
+  if ( i == 0 && ( lenYZ >= lenXZ || lenYZ >= lenXY ) )
     return true; 
-  else if ( i == 1 && ( lenXZ > lenXY || lenXZ > lenYZ ) )
+  else if ( i == 1 && ( lenXZ >= lenXY || lenXZ >= lenYZ ) )
     return true; 
-  else if ( i == 2 && ( lenXY > lenXZ || lenXY > lenYZ ) )
+  else if ( i == 2 && ( lenXY >= lenXZ || lenXY >= lenYZ ) )
   return true;
   return false;
 }

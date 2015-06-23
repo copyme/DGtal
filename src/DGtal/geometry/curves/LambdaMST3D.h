@@ -48,28 +48,28 @@
 #include "DGtal/geometry/curves/FunctorsLambdaMST.h"
 
 namespace DGtal {
-
+  
   //!\todo add in documentation why we added + 1
-template < typename TSpace, typename TSegmentation, typename Functor >
-class LambdaMST3DEstimator
-{
-public: 
+  template < typename TSpace, typename TSegmentation, typename Functor >
+  class LambdaMST3DEstimator
+  {
+  public: 
     ///Checking concepts
     BOOST_CONCEPT_ASSERT(( concepts::CSpace<TSpace> ));
     BOOST_STATIC_ASSERT(( TSpace::dimension == 3 ));
     BOOST_CONCEPT_ASSERT(( CIncrementalSegmentComputer<typename TSegmentation::SegmentComputer> ));
     // ----------------------- Types ------------------------------
-public:
+  public:
     typedef TSegmentation Segmentation;
     typedef typename TSegmentation::SegmentComputer SegmentComputer;
     typedef typename SegmentComputer::ConstIterator ConstIterator;
     typedef typename Functor::Value Value;
     typedef typename TSpace::RealVector RealVector;
     typedef typename TSpace::Point Point;
-
-  // ----------------------- Standard services ------------------------------
-public:
-  LambdaMST3DEstimator(): myBegin(), myEnd(), dssSegments ( 0 ), myFunctor(), lenFilter ( 0 ), distFilter (-1) {}
+    
+    // ----------------------- Standard services ------------------------------
+  public:
+    LambdaMST3DEstimator(): myBegin(), myEnd(), dssSegments ( 0 ), myFunctor(), lenFilter ( 0 ), distFilter (-1) {}
     
     /**
      * Initialisation.
@@ -78,8 +78,8 @@ public:
      */
     void init ( const ConstIterator& itb, const ConstIterator& ite )
     {
-        myBegin = itb;
-        myEnd = ite; 
+      myBegin = itb;
+      myEnd = ite; 
     }
     
     /**
@@ -87,9 +87,9 @@ public:
      */
     void attach ( const TSegmentation & aSC )
     {
-        dssSegments = &aSC;
+      dssSegments = &aSC;
     }
-
+    
     void setLengthFilter ( const double & lenFi )
     {
       lenFilter = lenFi;
@@ -100,7 +100,7 @@ public:
     {
       distFilter = distFi;
     }
-
+    
     /**
      * @param point to calculate A and B for it
      * @return A and B
@@ -144,31 +144,29 @@ public:
 	  SegmentComputer comp ( *DSS );
 	  partial = myFunctor ( comp, pos, dssLen );
 	  if (avg)
-	    partial.eccentricity = 1.;
-	  if ( prev.vector.cosineSimilarity ( partial.vector ) > M_PI_2 )
-	    partial.vector = -partial.vector;
-	  partial.vector *= partial.eccentricity;
-	  tangent += partial;
+	    partial.second = 1.;
+	  if ( prev.first.cosineSimilarity ( partial.first ) > M_PI_2 )
+	    partial.first = -partial.first;
+	  
+	  tangent.first += partial.first;
+	  tangent.second += partial.second;
 	}
       }
       if (!found)
 	throw std::runtime_error("Uncovered point!");
-      if ( tangent.eccentricity < 1E-20 )
-	return tangent.vector;
-      else
-	return tangent.vector / tangent.eccentricity;
+      return tangent.first / tangent.second;
     }
-
+    
     /**
      * @param result output iterator on the estimated quantity
      *
      * @return the estimated quantity
      * from itb till ite (excluded)
      */
-    template <typename ResultType>
+    template < typename ResultType >
     void eval ( std::vector<ResultType> & result )
     {
-      assert ( isValid() );
+      assert ( myBegin != myEnd && isValid() );
       std::multimap < Point, Value > outValues;
       typename TSegmentation::SegmentComputerIterator DSS = dssSegments->begin();
       typename TSegmentation::SegmentComputerIterator lastDSS = dssSegments->end();
@@ -180,50 +178,50 @@ public:
 	if ( dssLen > lenFilter )
 	  for ( int indexOfPointInDSS = 1; indexOfPointInDSS < dssLen; indexOfPointInDSS++ )
 	    outValues.insert ( std::make_pair ( *(DSS.begin() + indexOfPointInDSS), myFunctor ( comp, indexOfPointInDSS, dssLen ) ) );
-	else
-	  std::cerr << "Segment too short: " << dssLen << ", filter: " << lenFilter << std::endl;
+	  else
+	    std::cerr << "Segment too short: " << dssLen << ", filter: " << lenFilter << std::endl;
       }
-      
-      //! \todo simplification -- we need inverse direction when needed, \todo circulator end
+      accumulate< ResultType >( outValues, result );
+    }
+    
+    // ----------------------- Standard services ------------------------------
+  public:
+    
+    /**
+     * Checks the validity/consistency of the object.
+     * @return 'true' if the object is valid, 'false' otherwise.
+     */
+    bool isValid() const
+    {
+      return ( dssSegments != 0 );
+    }
+    
+    // ------------------------- Internals ------------------------------------
+  protected:
+    
+    template <typename ResultType>
+    void accumulate ( std::multimap < Point, Value > & outValues, std::vector<ResultType> & result )
+    {
+      Value prev = outValues.begin()->second;
       for ( ConstIterator itt = myBegin; itt != myEnd; ++itt )
       {
 	typename std::multimap< Point, Value >::const_iterator it  = outValues.lower_bound ( *itt );
 	typename std::multimap< Point, Value >::const_iterator it2 = outValues.upper_bound ( *itt );
-	static Value prev = it->second;
 	Value tangent;
 	for (; it != it2; it++ )
 	{
 	  Value partial = it->second;
-	  if (  prev.vector.cosineSimilarity ( partial.vector ) > M_PI_2 )
-	  {
-	    partial.vector = -partial.vector;
-	  }
+	  if (  prev.first.cosineSimilarity ( partial.first ) > M_PI_2 )
+	    partial.first = -partial.first;
 	  prev = partial;
-	  partial.vector *= partial.eccentricity;
-	  tangent += partial;
+	  tangent.first += partial.first;
+	  tangent.second += partial.second;
 	}
-	if ( tangent.eccentricity < 1E-20 )
-	  result.push_back ( tangent.vector );
-	else
-	  result.push_back ( tangent.vector / tangent.eccentricity );
+	outValues.erase ( *itt );
+	result.push_back ( tangent.first / tangent.second );
       }
     }
     
-    // ----------------------- Standard services ------------------------------
-public:
-
-   /**
-   * Checks the validity/consistency of the object.
-   * @return 'true' if the object is valid, 'false' otherwise.
-   */
-    bool isValid() const
-    {
-        return ( myBegin != myEnd && dssSegments != 0 );
-    }
-    
-    // ------------------------- Internals ------------------------------------
-protected:
-  
     template <class TPoint>
     double EuclideanDistance ( TPoint const & a, TPoint const & b )
     {
@@ -232,89 +230,79 @@ protected:
 	dist += ( a[i] - b[i] ) * ( a[i] - b[i] );
       return std::sqrt ( dist );
     }
-
+    
     // ------------------------- Private Datas --------------------------------
-private:
+  private:
     ConstIterator myBegin;
     ConstIterator myEnd;
     const TSegmentation * dssSegments;
     Functor myFunctor;
     double lenFilter;
     double distFilter;
-
-}; // end of class LambdaTangentFromDSSEstimator 
-
-/**
- * Description of class 'LambdaTangentFromDSS' <p> Aim:
- * \todo -- description
- */
-template<typename DSS, typename LambdaFunction>
-class TangentFromDSS3DFunctor
-{
-public:
+    
+  }; // end of class LambdaTangentFromDSSEstimator 
+  
+  /**
+   * Description of class 'LambdaTangentFromDSS' <p> Aim:
+   * \todo -- description
+   */
+  template<typename DSS, typename LambdaFunction>
+  class TangentFromDSS3DFunctor
+  {
+  public:
     // ----------------------- Types ------------------------------
     typedef PointVector<3, double> Vector;
-    typedef struct LambdaCharacteristics
-    {
-        Vector vector;
-        double eccentricity = 0.0;
-        LambdaCharacteristics & operator += ( const LambdaCharacteristics & ch )
-        {
-            this->vector += ch.vector;
-            this->eccentricity += ch.eccentricity;
-            return *this;
-        }
-    }Value;
-
+    typedef std::pair<Vector, double> Value;
+    
     // ----------------------- Interface --------------------------------------
     Value operator() ( const DSS& aDSS, const int & indexOfPointInDSS, const int & dssLen ) const
     {
-        Value result;
-        typename DSS::Point3d directionZ3;
-        Vector direction;
-        typename DSS::PointD3d intercept;
-        typename DSS::PointD3d thikness;
-
-        aDSS.getParameters ( directionZ3, intercept, thikness );
-        direction[0] = directionZ3[0];
-        direction[1] = directionZ3[1];
-        direction[2] = directionZ3[2];
-
-        result.eccentricity = lambdaFunctor( (double)indexOfPointInDSS / (double)dssLen );
-
-        double norm = direction.norm();
-        if ( norm > 1E-20 )
-            direction /= norm;
-        result.vector = direction;
-        return result;
+      Value result;
+      typename DSS::Point3d directionZ3;
+      Vector direction;
+      typename DSS::PointD3d intercept;
+      typename DSS::PointD3d thikness;
+      
+      aDSS.getParameters ( directionZ3, intercept, thikness );
+      direction[0] = directionZ3[0];
+      direction[1] = directionZ3[1];
+      direction[2] = directionZ3[2];
+      
+      result.second = lambdaFunctor ( (double)indexOfPointInDSS / (double)dssLen );
+      
+      double norm = direction.norm();
+      if ( norm != 0. )
+	direction /= norm;
+      result.first = direction * result.second;
+      return result;
     }
-private:
+  private:
     // ------------------------- Private Datas --------------------------------
     LambdaFunction lambdaFunctor;
-};
-
-//-------------------------------------------------------------------------------------------
-
-// Template class LambdaMST3D
-/**
-* \brief Aim: Simplify creation of Lambda MST tangent estimator.
-*
-*/
-template < typename DSSSegmentationComputer, typename lambdaFunction = functors::Lambda64Function>
-class LambdaMST3D:
-        public LambdaMST3DEstimator<Z3i::Space, DSSSegmentationComputer,
-        TangentFromDSS3DFunctor< typename DSSSegmentationComputer::SegmentComputer, lambdaFunction> >
-{
-    typedef 
-    LambdaMST3DEstimator<Z3i::Space, DSSSegmentationComputer,
-    TangentFromDSS3DFunctor< typename DSSSegmentationComputer::SegmentComputer, lambdaFunction> > Super;
-    
-public: 
-    /**
-   * Default Constructor.
+  };
+  
+  //-------------------------------------------------------------------------------------------
+  
+  // Template class LambdaMST3D
+  /**
+   * \brief Aim: Simplify creation of Lambda MST tangent estimator.
+   *
    */
-    LambdaMST3D() : Super() {}
-};
+  template < typename DSSSegmentationComputer, typename lambdaFunction = functors::Lambda64Function>
+  class LambdaMST3D:
+  public LambdaMST3DEstimator<Z3i::Space, DSSSegmentationComputer,
+    TangentFromDSS3DFunctor< typename DSSSegmentationComputer::SegmentComputer, lambdaFunction> >
+    {
+      typedef 
+      LambdaMST3DEstimator<Z3i::Space, DSSSegmentationComputer,
+      TangentFromDSS3DFunctor< typename DSSSegmentationComputer::SegmentComputer, lambdaFunction> > Super;
+      
+    public: 
+      /**
+       * Default Constructor.
+       */
+      LambdaMST3D() : Super() {}
+    };
 }// namespace DGtal
 
 #endif // !defined LAMBDAMST3D_h
