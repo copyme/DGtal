@@ -27,7 +27,7 @@
 template < typename TSpace, typename TSegmentation, typename Functor >
 inline
 DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::LambdaMST3DEstimator() :
-myBegin(), myEnd(), dssSegments ( 0 ), myFunctor() {}
+myBegin(), myEnd(), dssSegments ( 0 ), myFunctor(), lenFilter ( 0 ), distFilter (-1) {}
 
 
 template < typename TSpace, typename TSegmentation, typename Functor >
@@ -66,15 +66,35 @@ DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::eval
   typename TSegmentation::SegmentComputerIterator lastDSS = dssSegments->end();
   Value tangent, partial, prev;
   
+  bool avg = false;
+  
+  //!\todo move or remove
   for ( ; DSS != lastDSS; ++DSS )
   {
-    if ( DSS->isInDSS ( point ) )
+    if ( !DSS->isInDSS ( point ) && ( EuclideanDistance<Point>( point, *(DSS->begin()) ) <= distFilter || EuclideanDistance <Point>( point, *(DSS->end()-1) ) <= distFilter )  )
+    {
+      avg = true;
+      break;
+    }
+  }
+  DSS = dssSegments->begin();
+  for ( ; DSS != lastDSS; ++DSS )
+  {
+    if ( DSS->isInDSS ( point ) || ( EuclideanDistance<Point>( point, *(DSS->begin()) ) <= distFilter || EuclideanDistance <Point>( point, *(DSS->end()-1) ) <= distFilter )  )
     {
       unsigned int dssLen = std::distance ( DSS.begin(), DSS.end() ) + 1;
+      if ( dssLen-1 < lenFilter )
+      {
+	std::cerr << "Segment too short: " << dssLen << ", filter: " << lenFilter << std::endl;
+	continue;
+      }
       prev = partial;
       unsigned int pos = std::distance ( DSS.begin(), std::find ( DSS.begin(), DSS.end(), point ) ) + 1;
       SegmentComputer comp ( *DSS );
       partial = myFunctor ( comp, pos, dssLen );
+      if (avg)
+	partial.second = 1.;
+      partial.first *= partial.second;
       if ( prev.first.cosineSimilarity ( partial.first ) > M_PI_2 )
 	partial.first = -partial.first;
       tangent += partial;
@@ -158,6 +178,6 @@ DGtal::TangentFromDSS3DFunctor<DSS, LambdaFunction>::operator()
   double norm = direction.norm();
   if ( norm != 0. )
     direction /= norm;
-  result.first = direction * result.second;
+  result.first = direction;
   return result;
 }

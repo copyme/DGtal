@@ -93,6 +93,18 @@ namespace DGtal {
      * @return A and B
      */
     RealVector eval ( const Point & point );
+   
+    void setLengthFilter ( const double & lenFi )
+    {
+      lenFilter = lenFi;
+    }
+    
+    //! Works only with  RealVector eval ( const Point & point )
+    void setDistanceFilter ( const double & distFi )
+    {
+      distFilter = distFi;
+    }
+    
     
     /**
      * @param result output iterator on the estimated quantity
@@ -109,12 +121,23 @@ namespace DGtal {
     template < typename Containter >
     void accumulate ( std::multimap < Point, Value > & outValues, std::back_insert_iterator < Containter > result );
     
+    template <class TPoint>
+    double EuclideanDistance ( TPoint const & a, TPoint const & b )
+    {
+      double dist = 0.;
+      for ( unsigned short i = 0; i < TPoint::dimension; i++ )
+	dist += ( a[i] - b[i] ) * ( a[i] - b[i] );
+      return std::sqrt ( dist );
+    }
+    
     // ------------------------- Private Datas --------------------------------
   private:
     ConstIterator myBegin;
     ConstIterator myEnd;
     const TSegmentation * dssSegments;
     Functor myFunctor;
+    double lenFilter;
+    double distFilter;
     
   }; // end of class LambdaTangentFromDSSEstimator 
   
