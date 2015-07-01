@@ -153,7 +153,8 @@ namespace DGtal {
     typedef struct t_Value
     {
       Vector first;
-      double second = 0.0;
+      double second;
+      t_Value () : second ( 0. ) {}
       t_Value & operator += ( const t_Value & ch )
       {
 	this->first += ch.first;
