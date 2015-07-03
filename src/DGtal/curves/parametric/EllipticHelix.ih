@@ -103,7 +103,7 @@ double DGtal::EllipticHelix<T>:: g ( const RealPoint & p ) const
   {
     double value = std::asin ( p[1]/r2 );
     if ( std::isnan ( value ) )
-      return 2 * M_PI + M_PI_2;
+      return 2 * M_PI - M_PI_2;
     else
       return 2 * M_PI + value;
   }
