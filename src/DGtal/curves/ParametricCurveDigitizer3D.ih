@@ -152,11 +152,11 @@ namespace DGtal
 	  }
 	  else
 	  { 
-	    pStep = 1E-6;
+	    pStep /= 10.;
 	    //If we could not find a good one. Seems that it can happened.
-	    blockAxis = mainAxis;
-	    if ( errC == 2 )
-	      blockAxis = -1;
+// 	    blockAxis = mainAxis;
+// 	    if ( errC == 2 )
+// 	      blockAxis = -1;
 	    errC++;
 	  }
 	}

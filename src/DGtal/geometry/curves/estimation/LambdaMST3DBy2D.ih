@@ -104,21 +104,21 @@ DGtal::LambdaMST3DBy2DEstimator< Iterator3D, Functor, LambdaFunctor, CONNECTIVIT
   while ( status && front >= myBegin && front < myEnd )
   {
     unsigned int test = 0;
-    if ( xy && myProjXY (*front) != curveXY.front() )
+    if ( xy && std::find ( curveXY.begin(), curveXY.end(), myProjXY ( *front ) ) == curveXY.end() )
     {
       curveXY.push_front ( myProjXY ( *front ) );
       test++;
     }
     else
       xy = false;
-    if ( xz && myProjXZ (*front) != curveXZ.front() )
+    if ( xz && std::find ( curveXZ.begin(), curveXZ.end(), myProjXZ ( *front ) ) == curveXZ.end() )
     {
       curveXZ.push_front ( myProjXZ ( *front ) );
       test++;
     }
     else
       xz = false;
-    if ( yz && myProjYZ (*front) != curveYZ.front() )
+    if ( yz && std::find ( curveYZ.begin(), curveYZ.end(), myProjYZ ( *front ) ) == curveYZ.end() )
     {
       curveYZ.push_front ( myProjYZ ( *front ) );
       test++;
@@ -148,21 +148,21 @@ DGtal::LambdaMST3DBy2DEstimator< Iterator3D, Functor, LambdaFunctor, CONNECTIVIT
   while ( status && back > myBegin && back < myEnd )
   {
     unsigned int test = 0;
-    if ( xy && myProjXY (*back) != curveXY.back() )
+    if ( xy && std::find ( curveXY.begin(), curveXY.end(), myProjXY ( *back ) ) == curveXY.end() )
     {
       curveXY.push_back ( myProjXY ( *back ) );
       test++;
     }
     else
       xy = false;
-    if ( xz && myProjXZ (*back) != curveXZ.back() )
+    if ( xz && std::find ( curveXZ.begin(), curveXZ.end(), myProjXZ ( *back ) ) == curveXZ.end() )
     {
       curveXZ.push_back ( myProjXZ ( *back ) );
       test++;
     }
     else
       xz = false;
-    if ( yz && myProjYZ (*back) != curveYZ.back() )
+    if ( yz && std::find ( curveYZ.begin(), curveYZ.end(), myProjYZ ( *back ) ) == curveYZ.end() )
     {
       curveYZ.push_back ( myProjYZ ( *back ) );
       test++;
