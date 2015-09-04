@@ -78,7 +78,7 @@ public:
     void attach ( const TParametricCurve & t_curve );
     void init ( DigitalCurve & digiCurve );
 
-    void digitize ( const double & tmin, double & tmax, double step );
+    void digitize ( const double & tmin, double & tmax, const double & step );
 
     /**
      * Writes/Displays the object on an output stream.
@@ -104,7 +104,7 @@ protected:
     bool is26Connected ( const Point &x, const Point &y );
     // ------------------------- Hidden services ------------------------------
 protected:
-  virtual unsigned char findMainAxis ( const char & blockAxis, const double & i );
+  virtual unsigned char findMainAxis ( const double & i );
   virtual Point CurvePoint ( const char & mainAxis, const double & t, double & t_time );
 private:
 

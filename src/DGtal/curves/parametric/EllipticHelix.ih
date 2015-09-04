@@ -57,23 +57,22 @@ typename DGtal::EllipticHelix<T>::RealPoint DGtal::EllipticHelix<T>::xp ( const 
 
 template < typename T>
 inline
+//!\todo treat exceptions
 double DGtal::EllipticHelix<T>:: f ( const RealPoint & p ) const
 {
     if ( p[1]  >= 0. )
     {
         double value = std::acos ( p[0] / r1 );
         if ( std::isnan ( value ) )
-            return 0.;
-        else
-            return value;
+	    throw std::runtime_error ( "Out of range!" );
+	return value;
     }
     else if ( p[1] < 0. )
     {
         double value = std::acos ( p[0] / r1 );
-        if ( std::isnan ( value ) )
-            return 0.;
-        else
-            return  2 * M_PI - value;
+	if ( std::isnan ( value ) )
+	  throw std::runtime_error ( "Out of range!" );
+	return  2 * M_PI - value;
     }
     else
         throw std::runtime_error ( "Out of range!" );
@@ -85,27 +84,24 @@ double DGtal::EllipticHelix<T>:: g ( const RealPoint & p ) const
 {
   if ( p[0] >= 0. && p[1] >= 0. )
   {
-    double value = std::asin ( p[1]/r2 );
+    double value = std::asin ( p[1] / r2 );
     if ( std::isnan ( value ) )
-      return M_PI_2;
-    else
-      return value;
+      throw std::runtime_error ( "Out of range!" );
+    return value;
   }
   else if ( p[0] < 0. )
   {
-    double value = std::asin ( p[1]/r2 );
+    double value = std::asin ( p[1] / r2 );
     if ( std::isnan ( value ) )
-      return M_PI_2;
-    else
-      return M_PI - value;
+      throw std::runtime_error ( "Out of range!" );
+    return M_PI - value;
   }
   else if ( p[0] >= 0. && p[1] < 0. )
   {
-    double value = std::asin ( p[1]/r2 );
+    double value = std::asin ( p[1]/ r2 );
     if ( std::isnan ( value ) )
-      return 2 * M_PI - M_PI_2;
-    else
-      return 2 * M_PI + value;
+      throw std::runtime_error ( "Out of range!" );
+    return 2 * M_PI + value;
   }
   else
     throw std::runtime_error ( "Out of range!" );

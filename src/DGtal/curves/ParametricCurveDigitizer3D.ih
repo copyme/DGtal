@@ -46,7 +46,7 @@ namespace DGtal
   inline
   ParametricCurveDigitizer3D<T>::ParametricCurveDigitizer3D() : curve ( 0 )
   {
-    attemptNumber = 3;
+    attemptNumber = 2;
   }
   
   template <typename T>
@@ -69,15 +69,12 @@ namespace DGtal
   
   template <typename T>
   inline
-  unsigned char ParametricCurveDigitizer3D<T>::findMainAxis ( const char & blockAxis, const double & i )
+  unsigned char ParametricCurveDigitizer3D<T>::findMainAxis ( const double & i )
   {
     ParametricCurveDigitizer3D<T>::RealVector value;
     value[0] = std::fabs ( curve->xp ( i )[0] );
     value[1] = std::fabs ( curve->xp ( i )[1] );
     value[2] = std::fabs ( curve->xp ( i )[2] );
-    
-    if ( blockAxis != -1 )
-      value[blockAxis] = FLT_MIN;
     
     if ( value[0] > value[1] && value[0] > value[2] )
       return 0;
@@ -89,11 +86,10 @@ namespace DGtal
   
   template <typename T>
   inline
-  void ParametricCurveDigitizer3D<T>::digitize ( const double & tmin, double & tmax, double step )
+  void ParametricCurveDigitizer3D<T>::digitize ( const double & tmin, double & tmax, const double & step )
   {
     assert ( isValid() );
     Point curvePoint;
-    char blockAxis = -1;
     double pStep = step;
     unsigned int errC = 0;
     double time = 0., pTime = 0.;
@@ -105,7 +101,7 @@ namespace DGtal
 	tmax = i;
 	throw std::runtime_error ( "Too many errors. Probably curvature or sampling step is too high." );
       }
-      unsigned char mainAxis = findMainAxis ( blockAxis, i );
+      unsigned char mainAxis = findMainAxis ( i );
       curvePoint = CurvePoint ( mainAxis, i, time );
       if (time == pTime)
 	continue;
@@ -153,17 +149,12 @@ namespace DGtal
 	  else
 	  { 
 	    pStep /= 10.;
-	    //If we could not find a good one. Seems that it can happened.
-// 	    blockAxis = mainAxis;
-// 	    if ( errC == 2 )
-// 	      blockAxis = -1;
 	    errC++;
 	  }
 	}
 	else
 	{
 	  pStep = step;
-	  blockAxis = -1;
 	  errC = 0;
 	  digitalCurve->push_back ( curvePoint );
 	}
@@ -178,12 +169,15 @@ namespace DGtal
   typename ParametricCurveDigitizer3D<T>::Point ParametricCurveDigitizer3D<T>::CurvePoint ( const char & mainAxis, const double & t, double & t_time )
   {
     Point curvePoint;
-//     double t_time = 0.;
     functors::VectorRounding < RealPoint, Point > pRound;
-    Point pp = pRound ( curve->x ( t ) );
+    RealPoint pp = pRound ( curve->x ( t ) );
     if ( mainAxis == 0 )
     {
-      t_time = curve->f ( pp );
+      try {
+	t_time = curve->f ( pp );
+      } catch ( ... ) {
+	t_time = t;
+      }
       RealPoint p = curve->x ( t_time );
       curvePoint[0] = pp[0];
       curvePoint[1] = std::round ( p[1] );
@@ -192,7 +186,11 @@ namespace DGtal
     }
     else if ( mainAxis == 1 )
     {
-      t_time = curve->g ( pp );
+      try {
+	t_time = curve->g ( pp );
+      } catch ( ... ) {
+	t_time = t;
+      }
       RealPoint p = curve->x ( t_time );
       curvePoint[0] = std::round ( p[0] );
       curvePoint[1] = pp[1];
@@ -201,7 +199,11 @@ namespace DGtal
     }
     else if ( mainAxis == 2 )
     {
-      t_time = curve->h ( pp );
+      try {
+	t_time = curve->h ( pp );
+      } catch ( ... ) {
+	t_time = t;
+      }
       RealPoint p = curve->x ( t_time );
       curvePoint[0] = std::round ( p[0] );
       curvePoint[1] = std::round ( p[1] );
