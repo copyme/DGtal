@@ -59,7 +59,7 @@ template < typename TSpace, typename TSegmentation, typename Functor >
 inline
 typename DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::RealVector
 DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::eval 
-( const typename DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::ConstIterator & it )
+( const typename DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::Point & point )
 {
   assert ( isValid() );
   typename TSegmentation::SegmentComputerIterator DSS = dssSegments->begin();
@@ -80,7 +80,7 @@ DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::eval
   DSS = dssSegments->begin();
   for ( ; DSS != lastDSS; ++DSS )
   {
-    if ( DSS->isInDSS ( *it ) || ( EuclideanDistance<Point>( *it, *(DSS->begin()) ) <= distFilter || EuclideanDistance <Point>( *it, *(DSS->end()-1) ) <= distFilter )  )
+    if ( DSS->isInDSS ( point ) || ( EuclideanDistance<Point>( point, *(DSS->begin()) ) <= distFilter || EuclideanDistance <Point>( point, *(DSS->end()-1) ) <= distFilter )  )
     {
       unsigned int dssLen = std::distance ( DSS.begin(), DSS.end() ) + 1;
       if ( dssLen-1 < lenFilter )
@@ -89,7 +89,7 @@ DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::eval
 	continue;
       }
       prev = partial;
-      unsigned int pos = std::distance ( DSS.begin(), std::find ( DSS.begin(), DSS.end(), *it ) ) + 1;
+      unsigned int pos = std::distance ( DSS.begin(), std::find ( DSS.begin(), DSS.end(), point ) ) + 1;
       SegmentComputer comp ( *DSS );
       partial = myFunctor ( comp, pos, dssLen );
       if (avg)

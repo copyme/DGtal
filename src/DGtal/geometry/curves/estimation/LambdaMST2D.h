@@ -98,7 +98,7 @@ namespace DGtal {
      * @param it ConstIterator defined over the underlying curve
      * @return tangent direction
      */
-    RealVector eval ( const ConstIterator & it );
+    RealVector eval ( const Point & point );
     
     /**
      * @tparam OutputIterator writable iterator.
