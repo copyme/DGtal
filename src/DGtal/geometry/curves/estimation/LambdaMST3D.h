@@ -44,43 +44,57 @@
 #include <DGtal/helpers/StdDefs.h>
 #include "DGtal/kernel/CSpace.h"
 #include "DGtal/kernel/PointVector.h"
-#include "DGtal/geometry/curves/CIncrementalSegmentComputer.h"
 #include "DGtal/geometry/curves/estimation/FunctorsLambdaMST.h"
+#include "DGtal/geometry/curves/CForwardSegmentComputer.h"
+#include "DGtal/geometry/curves/estimation/CLMSTTangentFromDSS.h"
 
 namespace DGtal {
-  
+  /**
+   * Aim: Implement Lambda MST tangent estimators. This class is a model of CCurveLocalGeometricEstimator.
+   * @tparam TSpace model of CSpace
+   * @tparam TSegmentation tangential cover obtained by a segmentation of a 2D digital curve by maximal straight segments
+   * @tparam Functor model of CLMSTTangentFrom2DSS
+   */
   template < typename TSpace, typename TSegmentation, typename Functor >
   class LambdaMST3DEstimator
   {
   public: 
-    ///Checking concepts
+    //Checking concepts
     BOOST_CONCEPT_ASSERT(( concepts::CSpace<TSpace> ));
     BOOST_STATIC_ASSERT(( TSpace::dimension == 3 ));
-    BOOST_CONCEPT_ASSERT(( CIncrementalSegmentComputer<typename TSegmentation::SegmentComputer> ));
+    BOOST_CONCEPT_ASSERT(( concepts::CLMSTTangentFromDSS<Functor> ));
+    BOOST_CONCEPT_ASSERT(( CForwardSegmentComputer<typename TSegmentation::SegmentComputer> ));
     // ----------------------- Types ------------------------------
   public:
+    /// Tangential cover algorithm
     typedef TSegmentation Segmentation;
+    /// Curve segmentation algorithm
     typedef typename TSegmentation::SegmentComputer SegmentComputer;
+    /// Type of iterator, at least readable and forward
     typedef typename SegmentComputer::ConstIterator ConstIterator;
+    /// Type returned by model of CLMSTTangentFrom2DSS
     typedef typename Functor::Value Value;
+    /// Type of 3d real vector
     typedef typename TSpace::RealVector RealVector;
+    /// Type of 3d real point
     typedef typename TSpace::Point Point;
     
     // ----------------------- Standard services ------------------------------
   public:
+    //! Default constructor.
     LambdaMST3DEstimator();
     
     /**
-     * Initialisation.
-     * @param itb, begin iterator
-     * @param ite, end iterator
+     * Initialization.
+     * @param itb begin iterator
+     * @param ite end iterator
      */
     void init ( const ConstIterator& itb, const ConstIterator& ite );
     
     /**
-     * @param segment - DSS segmentation algorithm
+     * @param segmentComputer - DSS segmentation algorithm
      */
-    void attach ( const TSegmentation & aSC );
+    void attach ( Alias<TSegmentation> segmentComputer );
     
     /**
      * Checks the validity/consistency of the object.
@@ -89,10 +103,10 @@ namespace DGtal {
     bool isValid() const;
     
     /**
-     * @param point to calculate A and B for it
-     * @return A and B
+     * @param it ConstIterator defined over the underlying curve
+     * @return tangent direction
      */
-    RealVector eval ( const Point & point );
+    RealVector eval ( const ConstIterator & it );
    
     void setLengthFilter ( const double & lenFi )
     {
@@ -105,21 +119,35 @@ namespace DGtal {
       distFilter = distFi;
     }
     
-    
     /**
-     * @param result output iterator on the estimated quantity
-     *
-     * @return the estimated quantity
-     * from itb till ite (excluded)
+     * @tparam OutputIterator writable iterator.
+     * More efficient way to compute tangent directions for all points of a curve.
+     * @param itb begin iterator
+     * @param ite end iterator
+     * @param result writable iterator over a container which stores estimated tangent directions.
      */
-    template < typename Containter >
-    void eval ( std::back_insert_iterator < Containter > result );
+    template <typename OutputIterator>
+    OutputIterator eval ( const ConstIterator & itb, const ConstIterator & ite, 
+                        OutputIterator result );
     
     // ------------------------- Internals ------------------------------------
   protected:
     
-    template < typename Containter >
-    void accumulate ( std::multimap < Point, Value > & outValues, std::back_insert_iterator < Containter > result );
+    /**
+     * @brief Accumulate partial results obtained for each point.
+     * In 3D it can happen that DSSs' direction vectors over same point are opposite.
+     * To avoid this problem we measure angle between segments' direction vectors and if this angle
+     * is bigger than \f$\pi/2\f$, then one of the vectors is reversed. 
+     * Finally, tangent direction is estimated and stored.
+     * 
+     * @tparam OutputIterator writable iterator.
+     * @param outValues partial results for each point
+     * @param itb begin iterator
+     * @param ite end iterator
+     * @param result writable iterator over a container which stores estimated tangent directions.
+     */
+    template <typename OutputIterator>
+    void accumulate ( std::multimap < Point, Value > & outValues, const ConstIterator& itb, const ConstIterator& ite, OutputIterator & result );
     
     template <class TPoint>
     double EuclideanDistance ( TPoint const & a, TPoint const & b )
@@ -132,58 +160,45 @@ namespace DGtal {
     
     // ------------------------- Private Datas --------------------------------
   private:
+    /**
+     * Iterator which corresponds to the beginning of a valid range - [myBegin, myEnd)
+     */
     ConstIterator myBegin;
+    /**
+     * Iterator which corresponds to the end of a valid range - [myBegin, myEnd)
+     */
     ConstIterator myEnd;
-    const TSegmentation * dssSegments;
+    /**
+     * Pointer to a curve segmentation algorithm.
+     */
+    TSegmentation * dssSegments;
+    /**
+     * Functor which takes:
+     * reference to digital straight segment - DSS, position of given point in DSS and length of DSS
+     * and returns DSS's direction and the eccentricity of the point in the DSS.
+     */
     Functor myFunctor;
     double lenFilter;
     double distFilter;
     
-  }; // end of class LambdaTangentFromDSSEstimator 
-  
-  /**
-   * Description of class 'LambdaTangentFromDSS' <p> Aim:
-   */
-  template<typename DSS, typename LambdaFunction>
-  class TangentFromDSS3DFunctor
-  {
-  public:
-    // ----------------------- Types ------------------------------
-    typedef PointVector<3, double> Vector;
-    typedef struct t_Value
-    {
-      Vector first;
-      double second = 0.0;
-      t_Value & operator += ( const t_Value & ch )
-      {
-	this->first += ch.first;
-	this->second += ch.second;
-	return *this;
-      }
-    } Value;
-    
-    // ----------------------- Interface --------------------------------------
-    Value operator() ( const DSS& aDSS, const int & indexOfPointInDSS, const int & dssLen ) const;
-  private:
-    // ------------------------- Private Datas --------------------------------
-    LambdaFunction lambdaFunctor;
-  };
+  }; // end of class LambdaTangentFromDSSEstimator
   
   //-------------------------------------------------------------------------------------------
   
   // Template class LambdaMST3D
   /**
    * \brief Aim: Simplify creation of Lambda MST tangent estimator.
-   *
+   * @tparam DSSSegmentationComputer tangential cover obtained by segmentation of a 2D digital curve by maximal straight segments
+   * @tparam LambdaFunction Lambda functor @see FunctorsLambdaMST.h
    */
-  template < typename DSSSegmentationComputer, typename lambdaFunction = functors::Lambda64Function>
+  template < typename DSSSegmentationComputer, typename LambdaFunction = functors::Lambda64Function>
   class LambdaMST3D:
   public LambdaMST3DEstimator<Z3i::Space, DSSSegmentationComputer,
-    TangentFromDSS3DFunctor< typename DSSSegmentationComputer::SegmentComputer, lambdaFunction> >
+    TangentFromDSS3DFunctor< typename DSSSegmentationComputer::SegmentComputer, LambdaFunction> >
     {
       typedef 
       LambdaMST3DEstimator<Z3i::Space, DSSSegmentationComputer,
-      TangentFromDSS3DFunctor< typename DSSSegmentationComputer::SegmentComputer, lambdaFunction> > Super;
+      TangentFromDSS3DFunctor< typename DSSSegmentationComputer::SegmentComputer, LambdaFunction> > Super;
       
     public: 
       /**

@@ -215,7 +215,7 @@ public:
        * Constructor.
        * @param aRigidFunctor  - rigid transformation functor.
        */
-    DomainRigidTransformation2D ( TRigidTransformFunctor & aRigidFunctor ) : transform ( aRigidFunctor ) {}
+    DomainRigidTransformation2D ( const  TRigidTransformFunctor & aRigidFunctor ) : transform ( aRigidFunctor ) {}
 
     /**
        * Operator
@@ -254,7 +254,7 @@ public:
 
     // ------------------------- Protected Datas ------------------------------
 protected:
-    TRigidTransformFunctor & transform;
+   const TRigidTransformFunctor & transform;
 };
 
 }// namespace DGtal::functors

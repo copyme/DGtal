@@ -39,7 +39,6 @@
 #include "DGtal/io/readers/PGMReader.h"
 #include "DGtal/io/readers/VolReader.h"
 #include "DGtal/io/writers/GenericWriter.h"
-#include "DGtal/kernel/BasicPointFunctors.h"
 ///////////////////////////////////////////////////////////////////////////////
 
 using namespace std;
@@ -80,7 +79,8 @@ public:
   bool forwardTransformation ()
   {
     Bounds bounds = domainForwardTrans ( binary.domain() );
-    Image transformed ( Domain ( bounds.first, bounds.second ) );
+    Domain d ( bounds.first, bounds.second );
+    Image transformed ( d );
     for ( Domain::ConstIterator it = binary.domain().begin(); it != binary.domain().end(); ++it )
     {
       transformed.setValue ( forwardTrans ( *it ), binary ( *it ) );
@@ -91,7 +91,8 @@ public:
   bool backwardTransformation ()
   {
     Bounds bounds = domainForwardTrans ( binary.domain() );
-    MyImageBackwardAdapter adapter ( binary, Domain ( bounds.first, bounds.second ), backwardTrans, idD );
+    Domain d ( bounds.first, bounds.second );
+    MyImageBackwardAdapter adapter ( binary, d, backwardTrans, idD );
     adapter >> "binary_after_backward.pgm3d";
     return true;
   }

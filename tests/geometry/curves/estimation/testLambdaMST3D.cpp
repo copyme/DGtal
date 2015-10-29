@@ -31,20 +31,15 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <iterator>
 #include "DGtal/base/Common.h"
 #include "ConfigTest.h"
 #include "DGtal/helpers/StdDefs.h"
 #include "DGtal/io/readers/PointListReader.h"
 #include "DGtal/geometry/curves/Naive3DDSSComputer.h"
 #include "DGtal/geometry/curves/estimation/LambdaMST3D.h"
-#include "DGtal/geometry/curves/estimation/LambdaMST3DBy2D.h"
 #include "DGtal/geometry/curves/SaturatedSegmentation.h"
 
-#ifdef __GNUC__
-   #ifndef NDEBUG
-      #include <fenv.h>
-   #endif
-#endif
 ///////////////////////////////////////////////////////////////////////////////
 
 using namespace std;
@@ -73,7 +68,7 @@ public:
   testLambdaMST3D ()
   {
     fstream inputStream;
-    inputStream.open ( testPath + "samples/sinus3D.dat", std::ios::in );
+    inputStream.open ( (testPath + "samples/sinus3D.dat").c_str(), std::ios::in );
     try {
       curve = PointListReader<Point>::getPointsFromInputStream ( inputStream );
       if ( curve.size() == 0) throw IOException();
@@ -83,60 +78,24 @@ public:
   }
   bool lambda64ByPoint ()
   {
-    Segmentation segmenter ( curve.cbegin(), curve.cend(), SegmentComputer() );
+    Segmentation segmenter ( curve.begin(), curve.end(), SegmentComputer() );
     LambdaMST3D < Segmentation > lmst64;
     lmst64.attach ( segmenter );
     lmst64.init ( curve.begin(), curve.end() );
-    for ( unsigned int i = 0; i < curve.size(); i++ )
+    for ( ConstIterator it = curve.begin(); it != curve.end(); ++it )
     {
-      lmst64.eval ( curve[i] );
+      lmst64.eval ( it );
     }
     return true;
   }
   bool lambda64()
   {
-    Segmentation segmenter ( curve.cbegin(), curve.cend(), SegmentComputer() );
+    Segmentation segmenter ( curve.begin(), curve.end(), SegmentComputer() );
     LambdaMST3D < Segmentation > lmst64;
     lmst64.attach ( segmenter );
     lmst64.init ( curve.begin(), curve.end() );
     vector < RealVector > tangent;
-    lmst64.eval < vector < RealVector > > ( back_inserter ( tangent ) );
-    return true;
-  }
-  bool lambda64Both()
-  {
-    Segmentation segmenter ( curve.cbegin(), curve.cend(), SegmentComputer() );
-    LambdaMST3D < Segmentation > lmst64;
-    lmst64.attach ( segmenter );
-    lmst64.init ( curve.begin(), curve.end() );
-    vector < RealVector > tangent;
-    lmst64.eval < vector < RealVector > > ( back_inserter ( tangent ) );
-    for ( unsigned int i = 0; i < curve.size(); i++ )
-    {
-      if ( lmst64.eval ( curve[i] ) != tangent[i] )
-	return false;
-    }
-    return true;
-  }
-  bool lambda64By2D()
-  {
-    LambdaMST3DBy2D < typename Range::const_iterator > lmst64;
-    lmst64.init ( curve.begin(), curve.end() );
-    lmst64.eval ( curve.front() );
-    return true;
-  }
-  
-  bool lambda64By2DBoth()
-  {
-    LambdaMST3DBy2D < typename Range::const_iterator > lmst64;
-    lmst64.init ( curve.begin(), curve.end() );
-    vector < RealVector > tangent;
-    lmst64.eval < vector < RealVector > > ( back_inserter ( tangent ) );
-    for ( unsigned int i = 0; i < curve.size(); i++ )
-    {
-      if ( lmst64.eval ( curve[i] ) != tangent[i] )
-	return false;
-    }
+    lmst64.eval < back_insert_iterator< vector < RealVector > > > ( curve.begin(), curve.end(), back_insert_iterator< vector < RealVector > > ( tangent ) );
     return true;
   }
 };
@@ -147,11 +106,6 @@ public:
 
 int main( int , char**  )
 {
-#ifdef __GNUC__
-   #ifndef NDEBUG
-    fetestexcept ( FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW );
-   #endif
-#endif
     bool res = true;
     testLambdaMST3D testLMST;
     trace.beginBlock ( "Testing LambdaMST3D" );
@@ -161,17 +115,6 @@ int main( int , char**  )
         trace.beginBlock ( "Testing calculation for whole curve" );
            res &= testLMST.lambda64();
         trace.endBlock();
-        trace.beginBlock ( "Testing values obtained from the both methods." );
-           res &= testLMST.lambda64Both();
-        trace.endBlock();
-    trace.endBlock();
-    trace.beginBlock ( "Testing LambdaMST3DBy2D" );
-	trace.beginBlock ( "Testing point only calculation" );
-	    res &= testLMST.lambda64By2D();
-	trace.endBlock();
-	trace.beginBlock ( "Testing values obtained from the both methods." );
-	    res &= testLMST.lambda64By2DBoth();
-	trace.endBlock();
     trace.endBlock();
     trace.emphase() << ( res ? "Passed." : "Error." ) << endl;
     return res ? 0 : 1;
