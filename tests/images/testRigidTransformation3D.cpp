@@ -39,6 +39,7 @@
 #include "DGtal/io/readers/PGMReader.h"
 #include "DGtal/io/readers/VolReader.h"
 #include "DGtal/io/writers/GenericWriter.h"
+#include "DGtal/kernel/BasicPointFunctors.h"
 ///////////////////////////////////////////////////////////////////////////////
 
 using namespace std;
