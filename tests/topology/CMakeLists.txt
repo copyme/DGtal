@@ -9,6 +9,7 @@ SET(DGTAL_TESTS_SRC
    testSCellsFunctor
    testUmbrellaComputer
    testSurfaceHelper
+   testDigitalSetToCellularGridConverter  
  )
 
 FOREACH(FILE ${DGTAL_TESTS_SRC})

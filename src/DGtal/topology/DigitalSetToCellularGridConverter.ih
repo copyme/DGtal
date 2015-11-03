@@ -15,13 +15,13 @@
  **/
 
 /**
- * @file DigitalSetToCellular2D.ih
+ * @file DigitalSetToCellularGridConverter.ih
  * @author Kacper Pluta (\c kacper.pluta@esiee.fr )
  * Laboratoire d'Informatique Gaspard-Monge - LIGM, France
  *
  * @date 2015/11/03
  *
- * Implementation of inline methods defined in DigitalSetToCellular2D.h
+ * Implementation of inline methods defined in DigitalSetToCellularGridConverter.h
  *
  * This file is part of the DGtal library.
  */
@@ -31,18 +31,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////
-#include <algorithm>
+#include <cassert>
 //////////////////////////////////////////////////////////////////////////////
 
 template < typename TKSpace, typename TDigitalSet >
 inline
-DGtal::DigitalSetToCellular2D< TKSpace, TDigitalSet >::
-DigitalSetToCellular2D ( const TKSpace & kspace ) : K ( kspace ) {}
+DGtal::DigitalSetToCellularGridConverter< TKSpace, TDigitalSet >::
+DigitalSetToCellularGridConverter ( const TKSpace & kspace ) : K ( kspace ) {}
 
 template < typename TKSpace, typename TDigitalSet >
 inline
 void
-DGtal::DigitalSetToCellular2D< TKSpace, TDigitalSet >::init ( 
+DGtal::DigitalSetToCellularGridConverter< TKSpace, TDigitalSet >::init ( 
 const ConstIterator & itb, const ConstIterator & ite )
 {
   myBegin = itb;
@@ -52,7 +52,7 @@ const ConstIterator & itb, const ConstIterator & ite )
 template < typename TKSpace, typename TDigitalSet >
 inline
 bool
-DGtal::DigitalSetToCellular2D< TKSpace, TDigitalSet >::isValid () const
+DGtal::DigitalSetToCellularGridConverter< TKSpace, TDigitalSet >::isValid () const
 {
   return ( myBegin != myEnd );
 }
@@ -60,32 +60,29 @@ DGtal::DigitalSetToCellular2D< TKSpace, TDigitalSet >::isValid () const
 template < typename TKSpace, typename TDigitalSet >
 inline
 void
-DGtal::DigitalSetToCellular2D< TKSpace, TDigitalSet >::
-toCellularGrid ( DGtal::DigitalSetToCellular2D< TKSpace, TDigitalSet >::Cells & cells0d,
-		 DGtal::DigitalSetToCellular2D< TKSpace, TDigitalSet >::Cells & cells1d,
-		 DGtal::DigitalSetToCellular2D< TKSpace, TDigitalSet >::Cells & cells2d )
+DGtal::DigitalSetToCellularGridConverter< TKSpace, TDigitalSet >::
+extractAllCells ( DGtal::DigitalSetToCellularGridConverter< TKSpace, TDigitalSet >::Cells & cells,
+		 typename TKSpace::Integer dim )
 {
-  DGtal::DigitalSetToCellular2D< TKSpace, TDigitalSet >::ConstIterator it = myBegin;
+  assert( dim != TKSpace::dimension );
+  DGtal::DigitalSetToCellularGridConverter< TKSpace, TDigitalSet >::ConstIterator it = myBegin;
   for (; it != myEnd; ++it )
   {
     typedef typename TKSpace::Cells CellsCollection;
     Cell cell2d = K.uSpel ( *it );
-    cells2d.insert ( cell2d );
     CellsCollection n = K.uFaces ( cell2d );
     for ( typename CellsCollection::ConstIterator itt = n.begin() ; itt < n.end(); ++itt )
     {
-      if ( K.uDim ( *itt ) == 0 )
-	cells0d.insert ( *itt );
-      else
-	cells1d.insert ( *itt );
+      if ( K.uDim ( *itt ) == dim )
+	cells.insert ( *itt );
     }
   }
 }
 
 template < typename TKSpace, typename TDigitalSet >
 inline
-DGtal::DigitalSetToCellular2D< TKSpace, TDigitalSet >::
-~DigitalSetToCellular2D() {}
+DGtal::DigitalSetToCellularGridConverter< TKSpace, TDigitalSet >::
+~DigitalSetToCellularGridConverter() {}
 
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////

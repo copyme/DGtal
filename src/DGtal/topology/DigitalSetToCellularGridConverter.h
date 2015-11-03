@@ -17,26 +17,26 @@
 #pragma once
 
 /**
- * @file DigitalSetToCellular2D.h
+ * @file DigitalSetToCellularGridConverter.h
  * @author Kacper Pluta (\c kacper.pluta@esiee.fr )
  * Laboratoire d'Informatique Gaspard-Monge - LIGM, France
  *
  * @date 2015/11/03
  *
- * Header file for module DigitalSetToCellular2D.cpp
+ * Header file for module DigitalSetToCellularGridConverter.cpp
  *
  * This file is part of the DGtal library.
  */
 
-#if defined(DigitalSetToCellular2D_RECURSES)
-#error Recursive header files inclusion detected in DigitalSetToCellular2D.h
-#else // defined(DigitalSetToCellular2D_RECURSES)
+#if defined(DigitalSetToCellularGridConverter_RECURSES)
+#error Recursive header files inclusion detected in DigitalSetToCellularGridConverter.h
+#else // defined(DigitalSetToCellularGridConverter_RECURSES)
 /** Prevents recursive inclusion of headers. */
-#define DigitalSetToCellular2D_RECURSES
+#define DigitalSetToCellularGridConverter_RECURSES
 
-#if !defined DigitalSetToCellular2D_h
+#if !defined DigitalSetToCellularGridConverter_h
 /** Prevents repeated inclusion of headers. */
-#define DigitalSetToCellular2D_h
+#define DigitalSetToCellularGridConverter_h
 
 //////////////////////////////////////////////////////////////////////////////
 // Inclusions
@@ -49,34 +49,42 @@ namespace DGtal
 {
 
 /////////////////////////////////////////////////////////////////////////////
-// class DigitalSetToCellular2D
+// class DigitalSetToCellularGridConverter
 /**
- * Description of class 'DigitalSetToCellular2D' <p>
+ * Description of class 'DigitalSetToCellularGridConverter' <p>
  * \brief Aim: Convert a DigitalSet to cubical complexes
- * 
- * \todo Write a 3D implementation.
+ * @tparam TKSpace - Khalimsky space
+ * @tparam TDigitalSet - a type of digital set.
  */
 template < typename TKSpace, typename TDigitalSet >
-class DigitalSetToCellular2D
+class DigitalSetToCellularGridConverter
 {
   //Checking concepts
-  BOOST_STATIC_ASSERT(( TKSpace::dimension == 2 ));
+  BOOST_STATIC_ASSERT(( TKSpace::dimension == TDigitalSet::Domain::dimension ));
   BOOST_CONCEPT_ASSERT(( concepts::CCellularGridSpaceND<TKSpace> ));
   // ----------------------- Types ------------------------------
 public:
+  /// Type of iterator, at least readable and forward
   typedef typename TDigitalSet::ConstIterator ConstIterator;
-  
+  /// Type of set which stores cells and guarantee that each cell can be added only once.
   typedef typename TKSpace::CellSet Cells;
+  /// Type of cell.
   typedef typename TKSpace::Cell Cell;
+  /// Type of iterator over cells.
   typedef typename Cells::const_iterator ConstCellsIterator;
     // ----------------------- Standard services ------------------------------
 public:
 
-    DigitalSetToCellular2D ( const TKSpace & kspace );
+    /**
+     * Constructor
+     * @param kspace - constant reference to Khalimsky space.
+     */
+    DigitalSetToCellularGridConverter ( const TKSpace & kspace );
+    
     /**
      * Destructor.
      */
-    ~DigitalSetToCellular2D();
+    ~DigitalSetToCellularGridConverter();
 
     // ----------------------- Interface --------------------------------------
 public:
@@ -89,23 +97,16 @@ public:
     void init ( const ConstIterator & itb, const ConstIterator & ite );
     
     /**
-     * \todo there must be the faster way without std::find, try to find it.
-     * Converts digital set to three sets which contains different cells.
-     * @param cells0d - collection of 0D cells
-     * @param cells1d - collections of 1D cells
-     * @param cells2d - collections of 2D cells
+     * Extract all faces of spels which have a given dimension.
+     * @param cells - collection of nD cells.
+     * @param dim   - dimension of cells to extract.
      */
-    void toCellularGrid ( Cells & cells0d, Cells & cells1d, Cells & cells2d );
+    void extractAllCells ( Cells & cells, typename TKSpace::Integer dim );
     /**
      * Checks the validity/consistency of the object.
      * @return 'true' if the object is valid, 'false' otherwise.
      */
     bool isValid() const;
-
-    // ------------------------- Protected Datas ------------------------------
-private:
-    // ------------------------- Private Datas --------------------------------
-private:
 
     // ------------------------- Hidden services ------------------------------
 protected:
@@ -114,7 +115,7 @@ protected:
      * Constructor.
      * Forbidden by default (protected to avoid g++ warnings).
      */
-    DigitalSetToCellular2D();
+    DigitalSetToCellularGridConverter();
 
 private:
 
@@ -123,7 +124,7 @@ private:
      * @param other the object to clone.
      * Forbidden by default.
      */
-    DigitalSetToCellular2D ( const DigitalSetToCellular2D & other );
+    DigitalSetToCellularGridConverter ( const DigitalSetToCellularGridConverter & other );
 
     /**
      * Assignment.
@@ -131,7 +132,7 @@ private:
      * @return a reference on 'this'.
      * Forbidden by default.
      */
-    DigitalSetToCellular2D & operator= ( const DigitalSetToCellular2D & other );
+    DigitalSetToCellularGridConverter & operator= ( const DigitalSetToCellularGridConverter & other );
 
     // ------------------------- Internals ------------------------------------
 private:
@@ -145,7 +146,7 @@ private:
    */
   ConstIterator myEnd;
 
-}; // end of class DigitalSetToCellular2D
+}; // end of class DigitalSetToCellularGridConverter
 
 } // namespace DGtal
 
@@ -153,14 +154,13 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 // Includes inline functions.
 #if !defined(BUILD_INLINE)
-#include "DGtal/topology/DigitalSetToCellular2D.ih"
+#include "DGtal/topology/DigitalSetToCellularGridConverter.ih"
 #endif
-
 
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-#endif // !defined DigitalSetToCellular2D_h
+#endif // !defined DigitalSetToCellularGridConverter_h
 
-#undef DigitalSetToCellular2D_RECURSES
-#endif // else defined(DigitalSetToCellular2D_RECURSES)
+#undef DigitalSetToCellularGridConverter_RECURSES
+#endif // else defined(DigitalSetToCellularGridConverter_RECURSES)
