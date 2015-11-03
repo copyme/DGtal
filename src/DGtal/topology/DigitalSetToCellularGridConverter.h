@@ -136,6 +136,7 @@ private:
 
     // ------------------------- Internals ------------------------------------
 private:
+  /// Reference to Khalimsky space
   const TKSpace & K;
   /**
    * Iterator which corresponds to the beginning of a valid range - [myBegin, myEnd)
