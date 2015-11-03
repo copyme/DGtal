@@ -56,7 +56,7 @@ int main( int , char** )
   trace.beginBlock ( "Example digitalSetToCubicalComplexes2D" );
   trace.beginBlock ( "Generate a 2D shape." );
   typedef Flower2D< Space > MyEuclideanShape;
-  MyEuclideanShape shape( RealPoint( 0.0, 0.0 ), 7, 5, 5, M_PI_2/2. );
+  MyEuclideanShape shape( RealPoint( 0.0, 0.0 ), 16, 5, 5, M_PI_2/2. );
   
   typedef GaussDigitizer< Space, MyEuclideanShape > MyGaussDigitizer;
   MyGaussDigitizer digShape;
@@ -78,6 +78,7 @@ int main( int , char** )
   trace.beginBlock ( "Generate a 2D cubical representation." );
   typedef DigitalSetToCellular2D< KSpace, DigitalSet > MyDigitalSetToCellular;
   typedef typename MyDigitalSetToCellular::Cells Cells;
+  typedef typename MyDigitalSetToCellular::ConstCellsIterator ConstCellsIterator;
   
   Cells cells0d, cells1d, cells2d;
   KSpace K;
@@ -91,18 +92,19 @@ int main( int , char** )
   board << CustomStyle( c.className(),
 			new CustomColors( Color( 0, 0, 200 ),
 					  Color( 100, 100, 255 ) ) );
-  for ( unsigned int i = 0; i < cells0d.size(); i++ )
-    board << cells0d[i];
+  
+  for ( ConstCellsIterator it = cells0d.begin(); it != cells0d.end(); ++it )
+    board << *it;
   board << CustomStyle( c.className(),
 			new CustomColors( Color( 200, 0, 0 ),
 					  Color( 255, 100, 100 ) ) );
-  for ( unsigned int i = 0; i < cells1d.size(); i++ )
-    board << cells1d[i];
+  for ( ConstCellsIterator it = cells1d.begin(); it != cells1d.end(); ++it )
+    board << *it;
   board << CustomStyle( c.className(),
 			new CustomColors( Color( 0, 200, 0 ),
 					  Color( 100, 255, 100 ) ) );
-  for ( unsigned int i = 0; i < cells2d.size(); i++ )
-    board << cells2d[i];
+  for ( ConstCellsIterator it = cells2d.begin(); it != cells2d.end(); ++it )
+    board << *it;
   
   board.saveEPS ( "cubicalComplexes.eps" );
   trace.endBlock();

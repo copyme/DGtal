@@ -42,6 +42,7 @@
 // Inclusions
 #include <iostream>
 #include "DGtal/base/Common.h"
+#include "DGtal/topology/CCellularGridSpaceND.h"
 //////////////////////////////////////////////////////////////////////////////
 
 namespace DGtal
@@ -60,12 +61,14 @@ class DigitalSetToCellular2D
 {
   //Checking concepts
   BOOST_STATIC_ASSERT(( TKSpace::dimension == 2 ));
+  BOOST_CONCEPT_ASSERT(( concepts::CCellularGridSpaceND<TKSpace> ));
   // ----------------------- Types ------------------------------
 public:
   typedef typename TDigitalSet::ConstIterator ConstIterator;
   
-  typedef typename TKSpace::Cells Cells;
-  typedef typename TKSpace::Cells::ConstIterator ConstCellsIterator;
+  typedef typename TKSpace::CellSet Cells;
+  typedef typename TKSpace::Cell Cell;
+  typedef typename Cells::const_iterator ConstCellsIterator;
     // ----------------------- Standard services ------------------------------
 public:
 

@@ -68,15 +68,16 @@ toCellularGrid ( DGtal::DigitalSetToCellular2D< TKSpace, TDigitalSet >::Cells & 
   DGtal::DigitalSetToCellular2D< TKSpace, TDigitalSet >::ConstIterator it = myBegin;
   for (; it != myEnd; ++it )
   {
-    cells2d.push_back ( K.uSpel ( *it ) );
-    DGtal::DigitalSetToCellular2D< TKSpace, TDigitalSet >::Cells n = K.uFaces ( cells2d.back() );
-    DGtal::DigitalSetToCellular2D< TKSpace, TDigitalSet >::ConstCellsIterator itt = n.begin();
-    for ( ; itt < n.end(); ++itt )
+    typedef typename TKSpace::Cells CellsCollection;
+    Cell cell2d = K.uSpel ( *it );
+    cells2d.insert ( cell2d );
+    CellsCollection n = K.uFaces ( cell2d );
+    for ( typename CellsCollection::ConstIterator itt = n.begin() ; itt < n.end(); ++itt )
     {
-      if ( K.uDim ( *itt ) == 0 && std::find ( cells0d.begin(), cells0d.end(), *itt ) == cells0d.end() )
-	cells0d.push_back ( *itt );
-      if ( K.uDim ( *itt ) == 1 && std::find ( cells1d.begin(), cells1d.end(), *itt ) == cells1d.end() )
-	cells1d.push_back ( *itt );
+      if ( K.uDim ( *itt ) == 0 )
+	cells0d.insert ( *itt );
+      else
+	cells1d.insert ( *itt );
     }
   }
 }
