@@ -72,12 +72,15 @@ public:
     // ----------------------- Standard services ------------------------------
 public:
 
+    DigitalSetToCellular2D ( const TKSpace & kspace );
     /**
      * Destructor.
      */
     ~DigitalSetToCellular2D();
-    DigitalSetToCellular2D ( const TKSpace & kspace );
-    
+
+    // ----------------------- Interface --------------------------------------
+public:
+  
     /**
      * Initialization.
      * @param itb begin iterator
@@ -93,10 +96,6 @@ public:
      * @param cells2d - collections of 2D cells
      */
     void toCellularGrid ( Cells & cells0d, Cells & cells1d, Cells & cells2d );
-
-    // ----------------------- Interface --------------------------------------
-public:
-
     /**
      * Checks the validity/consistency of the object.
      * @return 'true' if the object is valid, 'false' otherwise.
