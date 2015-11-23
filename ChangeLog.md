@@ -7,6 +7,10 @@
    the width (vertical/horizontal or Euclidean) of a convex hull.
    (Bertrand Kerautret, [#1052](https://github.com/DGtal-team/DGtal/pull/1052))
 
+ - MelkmanConvexHull: new reverse method to allow point insertions and convex
+   hull computation on both side of a point sequence.
+   (Bertrand Kerautret, [#1073](https://github.com/DGtal-team/DGtal/pull/1073))
+
 ## Changes
 - *Base Package*
  - Enabling circulators in SimpleRandomAccessRangeFromPoint.
@@ -16,6 +20,13 @@
  - Minor improvements of default settings in Viewer3D. (David
    Coeurjolly, [#1066](https://github.com/DGtal-team/DGtal/pull/1066))
 
+ - New possibility to move the light source direction using the mouse move
+   in Viewer3D (with the key SHIFT+CTRL (SHIFT+CMD on mac)). The light source
+   direction is now defined according the main coordinate system (no more from
+   the camera center).
+   (Bertrand Kerautret [#1070](https://github.com/DGtal-team/DGtal/pull/1070))
+
+
 ## Bug Fixes
 
 - *Configuration/General*
@@ -24,8 +35,8 @@
  - Fixing boost include path issue when building tools using DGtal and
    its cmake DGtalConfig.cmake. (David Coeurjolly,
    [#1059](https://github.com/DGtal-team/DGtal/pull/1059))
- 
-
+ - Fixing parenthese warnings in Catch. Waiting for an official fix.
+   (Roland Denis, [#1069](https://github.com/DGtal-team/DGtal/pull/1069))
 
 - *Base Package*
  - Fix wrong initialization of reverse iterators in SimpleRandomAccess(Const)RangeFromPoint.
@@ -35,6 +46,17 @@
 # DGtal 0.9
 
 ## New Features / Critical Changes
+- *Geometry Package*
+
+- New segment computer allowing the recognition of thick digital segments,
+  adapted to noisy contours (from a given thickness parameter). The current
+  implementation (mainly a backport from imagene) is a model of
+  CForwardSegmentComputer with a ParallelStrip primitive. This primitive is
+  similar to the blurred segment of [Debled-Rennesson etal 2005] with isothetic
+  thickness. It is also an implementation of the alpha-thick segment of Alexandre
+  Faure and Fabien Feschet.
+  (Bertrand Kerautret,  [#963](https://github.com/DGtal-team/DGtal/pull/963))
+
 
 - *Configuration/General*
  - Continuous integration enabled on both linux and macosx
