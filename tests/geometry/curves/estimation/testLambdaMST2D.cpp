@@ -40,11 +40,6 @@
 #include "DGtal/geometry/curves/estimation/LambdaMST2D.h"
 #include "DGtal/geometry/curves/SaturatedSegmentation.h"
 
-#ifdef __GNUC__
-   #ifndef NDEBUG
-      #include <fenv.h>
-   #endif
-#endif
 ///////////////////////////////////////////////////////////////////////////////
 
 using namespace std;
@@ -77,35 +72,22 @@ public:
   }
   bool lambda64ByPoint ()
   {
-    Segmentation segmenter ( curve.cbegin(), curve.cend(), SegmentComputer() );
+    Segmentation segmenter ( curve.begin(), curve.end(), SegmentComputer() );
     LambdaMST2D < Segmentation > lmst64;
     lmst64.attach ( segmenter );
-    for ( unsigned int i = 0; i < curve.size(); i++ )
-      lmst64.eval ( curve[i] );
+    for ( ConstIterator it = curve.begin(); it != curve.end(); ++it )
+      lmst64.eval ( it );
     return true;
   }
   bool lambda64()
   {
-    Segmentation segmenter ( curve.cbegin(), curve.cend(), SegmentComputer() );
+    Segmentation segmenter ( curve.begin(), curve.end(), SegmentComputer() );
     LambdaMST2D < Segmentation > lmst64;
     lmst64.attach ( segmenter );
     lmst64.init ( curve.begin(), curve.end() );
     std::vector < RealVector > tangent;
-    lmst64.eval < vector < RealVector > > (  back_inserter ( tangent ) );
+    lmst64.eval < back_insert_iterator< vector < RealVector > > > ( curve.begin(), curve.end(),  back_inserter ( tangent ) );
     return true;
-  }
-  bool lambda64Both()
-  {
-    Segmentation segmenter ( curve.cbegin(), curve.cend(), SegmentComputer() );
-    LambdaMST2D < Segmentation > lmst64;
-    lmst64.attach ( segmenter );
-    lmst64.init ( curve.begin(), curve.end() );
-    vector < RealVector > tangent;
-    lmst64.eval < vector < RealVector > > ( back_inserter ( tangent ) );
-    for ( unsigned int i = 0; i < curve.size(); i++ )
-      if ( lmst64.eval ( curve[i] ) != tangent[i] )
-	return false;
-      return true;
   }
 };
 
@@ -115,11 +97,6 @@ public:
 
 int main( int , char**  )
 {
-#ifdef __GNUC__
-   #ifndef NDEBUG
-    fetestexcept ( FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW );
-   #endif
-#endif
     bool res = true;
     testLambdaMST2D testLMST;
     trace.beginBlock ( "Testing LambdaMST2D" );
@@ -128,9 +105,6 @@ int main( int , char**  )
         trace.endBlock();
         trace.beginBlock ( "Testing calculation for whole curve" );
            res &= testLMST.lambda64();
-        trace.endBlock();
-        trace.beginBlock ( "Testing values obtined from the both methods." );
-           res &= testLMST.lambda64Both();
         trace.endBlock();
     trace.emphase() << ( res ? "Passed." : "Error." ) << endl;
     trace.endBlock();

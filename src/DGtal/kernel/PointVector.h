@@ -541,9 +541,9 @@ namespace DGtal
     Self crossProduct( const Self &v) const;
 
     /**
-     * Angle between two vectors
-     * @param v a vector that is creates an angle with *this.
-     * @return angle
+     * Positive angle between two vectors, deduced from their scalar product.
+     * @param v any vector
+     * @return the angle between *this and v in [0,pi].
      */
     double cosineSimilarity ( const Self & v ) const;
 
@@ -753,8 +753,9 @@ namespace DGtal
      * a unitary vector on double.
      * 
      * @return a unitary vector with double as coordiante type. 
+     * @advanced the point container is forced to boost::array<double,dim> 
      */
-    PointVector<dim, double, Container> getNormalized() const;
+    PointVector<dim, double, boost::array<double,dim> > getNormalized() const;
     
 
     // ------------------------- Standard vectors ------------------------------

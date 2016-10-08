@@ -42,9 +42,9 @@ DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::init ( const Cons
 template < typename TSpace, typename TSegmentation, typename Functor >
 inline
 void
-DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::attach ( const TSegmentation & aSC )
+DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::attach ( Alias<TSegmentation> segmentComputer )
 {
-  dssSegments = &aSC;
+  dssSegments = &segmentComputer;
 }
 
 template < typename TSpace, typename TSegmentation, typename Functor >
@@ -107,13 +107,16 @@ DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::eval
 }
 
 template < typename TSpace, typename TSegmentation, typename Functor >
-template < typename Containter >
+template < typename OutputIterator >
 inline
-void
-DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::eval ( std::back_insert_iterator < Containter > result )
+OutputIterator
+DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::eval ( const typename DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::ConstIterator & itb, 
+								      const typename DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::ConstIterator & ite, 
+                                                                      OutputIterator result )
 {
-  assert ( myBegin != myEnd && isValid() );
+  assert ( myBegin != myEnd && isValid() && myBegin <= itb && ite <= myEnd && itb != ite );
   std::multimap < Point, Value > outValues;
+  dssSegments->setSubRange ( itb, ite );
   typename TSegmentation::SegmentComputerIterator DSS = dssSegments->begin();
   typename TSegmentation::SegmentComputerIterator lastDSS = dssSegments->end();
   
@@ -124,18 +127,21 @@ DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::eval ( std::back_
     for ( unsigned int indexOfPointInDSS = 0; indexOfPointInDSS < dssLen; indexOfPointInDSS++ )
       outValues.insert ( std::make_pair ( *(DSS.begin() + indexOfPointInDSS), myFunctor ( comp, indexOfPointInDSS+1, dssLen+1 ) ) );
   }
-  accumulate< Containter >( outValues, result );
+  accumulate< OutputIterator >( outValues, itb, ite, result );
+  return result;
 }
 
 template < typename TSpace, typename TSegmentation, typename Functor >
-template < typename Containter >
+template <typename OutputIterator>
 inline
 void
 DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::accumulate 
-( std::multimap < Point, Value > & outValues, std::back_insert_iterator < Containter > result )
+( std::multimap < Point, Value > & outValues, const typename DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::ConstIterator & itb, 
+					      const typename DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::ConstIterator & ite, 
+                                              OutputIterator & result )
 {
   Value prev = outValues.begin()->second;
-  for ( ConstIterator itt = myBegin; itt != myEnd; ++itt )
+  for ( ConstIterator itt = itb; itt != ite; ++itt )
   {
     typename std::multimap< Point, Value >::const_iterator it  = outValues.lower_bound ( *itt );
     typename std::multimap< Point, Value >::const_iterator it2 = outValues.upper_bound ( *itt );
@@ -150,34 +156,8 @@ DGtal::LambdaMST3DEstimator< TSpace, TSegmentation, Functor >::accumulate
     }
     outValues.erase ( *itt );
     if ( tangent.second != 0 )
-      result = ( tangent.first / tangent.second );
+      *result++ = ( tangent.first / tangent.second );
     else
-      result = tangent.first;
+      *result++ = tangent.first;
   }
-}
-
-template<typename DSS, typename LambdaFunction>
-inline
-typename DGtal::TangentFromDSS3DFunctor< DSS, LambdaFunction>::Value
-DGtal::TangentFromDSS3DFunctor<DSS, LambdaFunction>::operator() 
-( const DSS& aDSS, const int & indexOfPointInDSS, const int & dssLen ) const
-{
-  Value result;
-  typename DSS::Point3d directionZ3;
-  Vector direction;
-  typename DSS::PointD3d intercept;
-  typename DSS::PointD3d thikness;
-  
-  aDSS.getParameters ( directionZ3, intercept, thikness );
-  direction[0] = directionZ3[0];
-  direction[1] = directionZ3[1];
-  direction[2] = directionZ3[2];
-  
-  result.second = lambdaFunctor ( (double)indexOfPointInDSS / (double)dssLen );
-  
-  double norm = direction.norm();
-  if ( norm != 0. )
-    direction /= norm;
-  result.first = direction;
-  return result;
 }

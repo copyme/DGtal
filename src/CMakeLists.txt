@@ -9,11 +9,11 @@ include_directories(${PROJECT_BINARY_DIR}/src)
 # 
 #------------------------------------------------------------------------------
 include(DGtal/arithmetic/ModuleSRC.txt)
-include(DGtal/geometry/curves/estimation/ModuleSRC.txt)
 include(DGtal/kernel/ModuleSRC.txt)
 include(DGtal/base/ModuleSRC.txt)
 include(DGtal/io/ModuleSRC.txt)
 include(DGtal/math/ModuleSRC.txt)
+include(DGtal/geometry/curves/estimation/ModuleSRC.txt)
 ## Board dependency
 include(Board/ModuleSRC.txt)
 

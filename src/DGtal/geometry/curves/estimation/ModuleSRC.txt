@@ -1,5 +1,5 @@
-## Sources associated to the module estimation
+## Sources associated to the module geometry
 ##
 
-SET(DGTAL_SRC ${DGTAL_SRC} 
-		DGtal/geometry/curves/estimation/LambdaMST3DBy2D )
+SET(DGTAL_SRC ${DGTAL_SRC}
+    DGtal/geometry/curves/estimation/LambdaMST3DBy2D)
