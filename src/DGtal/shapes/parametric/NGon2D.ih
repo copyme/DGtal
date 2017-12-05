@@ -125,14 +125,9 @@ DGtal::NGon2D<T>::x( double t ) const
   RealPoint2D s3 ( s2[0] - s1[0],
                    s2[1] - s1[1]);
 
-  //double line_angle = atan2f( (float)s3[ 1 ], (float)s3[ 0 ]);
   double line_angle = atan2( s3[1], s3[0] );
-  //line_angle = (line_angle < 0.0) ? angle + 2 * M_PI : line_angle;
-
   double rho = dist / ( cos(t - line_angle - 0.5 * M_PI) );
-
   RealPoint2D c( - rho*cos(t), - rho*sin(t) );
-
   c += myCenter;
 
   return c;
@@ -158,7 +153,6 @@ DGtal::NGon2D<T>::xp( const double t ) const
   
   unsigned int intervalle_lower = static_cast<unsigned int>( floor( angle * myK / (2.0 * M_PI ) ) );
   unsigned int intervalle_upper = intervalle_lower == ( myK -1 ) ? 0 : intervalle_lower+1;
-  //float dist = myRadius*sin ( M_PI / myK );
   RealPoint2D s1 ( myRadius*cos(myPhi + intervalle_lower*2.0*M_PI/myK),
        myRadius*sin(myPhi + intervalle_lower*2.0*M_PI/myK) );
   RealPoint2D s2 ( myRadius*cos(myPhi + intervalle_upper*2.0*M_PI/myK),
